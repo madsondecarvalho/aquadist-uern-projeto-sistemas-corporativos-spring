@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaDist — Rota do Entregador</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💧</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        aqua: {
+                            50: '#ecfeff', 100: '#cffafe', 200: '#a5f3fc', 300: '#67e8f9',
+                            400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2', 700: '#0e7490',
+                            800: '#155e75', 900: '#164e63'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="stylesheet" href="/assets/css/app.css">
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-800">
+<header class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 lg:px-8">
+        <a href="/entregador.html" class="flex items-center gap-2.5">
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-aqua-600 text-xl text-white shadow-md shadow-aqua-600/25">💧</span>
+            <span>
+                <span class="block text-lg font-bold leading-5 tracking-tight text-slate-900">AquaDist</span>
+                <span class="block text-[11px] font-medium uppercase tracking-wider text-aqua-700">Rota do entregador</span>
+            </span>
+        </a>
+
+        <div class="flex items-center gap-3">
+            <div class="hidden text-right sm:block">
+                <p class="text-sm font-semibold text-slate-900" data-user-name>—</p>
+                <p class="text-xs text-slate-500">Entregador</p>
+            </div>
+            <button type="button" onclick="Aqua.logout()"
+                    class="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700">
+                Sair
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="mx-auto max-w-7xl px-4 py-6 lg:px-8">
+    <div id="loading" class="flex min-h-[55vh] items-center justify-center">
+        <div class="flex flex-col items-center gap-3 text-slate-500">
+            <span class="h-10 w-10 animate-spin rounded-full border-4 border-aqua-200 border-t-aqua-600"></span>
+            <p class="text-sm font-medium">Carregando rota...</p>
+        </div>
+    </div>
+
+    <div id="conteudo" class="hidden space-y-6">
+        <section class="grid gap-5 lg:grid-cols-3">
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div class="flex items-start gap-4">
+                        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-aqua-50 text-2xl text-aqua-700 ring-1 ring-aqua-100">🚚</div>
+                        <div>
+                            <h1 class="text-xl font-bold tracking-tight text-slate-900" id="motorista-nome">—</h1>
+                            <p class="mt-0.5 text-sm text-slate-500" id="motorista-email">—</p>
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                <span class="inline-flex rounded-full bg-aqua-100 px-2.5 py-0.5 text-xs font-bold text-aqua-800" id="motorista-zona">—</span>
+                                <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600" id="motorista-veiculo">—</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="btn-atualizar"
+                            class="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50">
+                        Atualizar rota
+                    </button>
+                </div>
+
+                <div class="mt-5 border-t border-slate-100 pt-5">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="font-semibold text-slate-700">Capacidade do veículo</span>
+                        <span class="text-slate-500"><strong id="carga-atual" class="text-slate-900">0</strong> / <span id="capacidade">0</span> garrafões</span>
+                    </div>
+                    <div class="progress-track mt-2 h-3 rounded-full">
+                        <div id="barra-capacidade" class="progress-fill h-3 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <div class="mt-2 flex justify-between text-xs text-slate-500">
+                        <span id="capacidade-disponivel">0 disponíveis</span>
+                        <span>Inclui pedidos atribuídos e em trânsito</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-500">Estoque no veículo</h2>
+                    <span class="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-bold text-indigo-700" id="qtd-estoque">0</span>
+                </div>
+                <div id="estoque-itens" class="mt-4 space-y-2"></div>
+                <details class="mt-4 rounded-xl border border-slate-200">
+                    <summary class="cursor-pointer px-3 py-2 text-xs font-semibold text-slate-600">Ver códigos carregados</summary>
+                    <div id="estoque-codigos" class="max-h-44 space-y-1 overflow-y-auto border-t border-slate-100 p-3 text-xs"></div>
+                </details>
+            </div>
+        </section>
+
+        <section>
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                    <h2 class="text-lg font-bold tracking-tight text-slate-900">Pedidos da minha rota</h2>
+                    <p class="mt-1 text-sm text-slate-500">Inicie o deslocamento e confirme a entrega com os vasilhames recebidos.</p>
+                </div>
+                <span class="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-600 ring-1 ring-slate-200">
+                    <span id="qtd-pedidos">0</span> pedido(s)
+                </span>
+            </div>
+
+            <div id="pedidos" class="mt-4 grid gap-4 xl:grid-cols-2"></div>
+        </section>
+    </div>
+</main>
+
+<dialog id="dialog-concluir" class="w-[min(94vw,860px)] rounded-2xl border-0 p-0 shadow-2xl">
+    <div class="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-4">
+        <div>
+            <p class="text-xs font-bold uppercase tracking-wider text-aqua-700">UC02 • Conclusão da entrega</p>
+            <h2 id="concluir-titulo" class="mt-0.5 text-xl font-bold text-slate-900">Pedido</h2>
+        </div>
+        <button type="button" id="btn-fechar-dialogo" onclick="fecharConcluir(true)"
+                class="rounded-lg px-2.5 py-1.5 text-sm font-bold text-slate-500 hover:bg-slate-100">Fechar</button>
+    </div>
+    <div class="max-h-[75vh] overflow-y-auto px-6 py-5">
+        <div id="concluir-resumo" class="rounded-xl bg-slate-50 p-4 text-sm text-slate-700"></div>
+        <div id="concluir-erro" class="sticky top-0 z-10 mt-3 hidden rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-800 shadow-sm"></div>
+
+        <form id="form-concluir" class="mt-5 space-y-4">
+            <div>
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Vasilhames devolvidos pelo cliente</h3>
+                        <p class="text-xs text-slate-500">Marque os vasilhames recolhidos. Vencidos são recusados na troca simples (RN05).</p>
+                        <p id="concluir-limites" class="mt-1 text-xs font-semibold text-aqua-700"></p>
+                    </div>
+                    <span id="contador-selecionados" class="rounded-full bg-aqua-50 px-2.5 py-1 text-xs font-bold text-aqua-700">0 selecionado(s)</span>
+                </div>
+                <div id="lista-vasilhames" class="mt-3 grid gap-2 sm:grid-cols-2"></div>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-2">
+                <div>
+                    <label for="pagamento-recebido" class="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500">Forma de pagamento recebida</label>
+                    <select id="pagamento-recebido" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-aqua-500 focus:ring-4 focus:ring-aqua-100">
+                        <option value="PIX">PIX</option>
+                        <option value="DINHEIRO">Dinheiro</option>
+                        <option value="CARTAO_CREDITO">Cartão de crédito</option>
+                        <option value="CARTAO_DEBITO">Cartão de débito</option>
+                        <option value="BOLETO">Boleto</option>
+                        <option value="FATURADO">Faturado</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="observacao-entrega" class="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500">Observação</label>
+                    <input id="observacao-entrega" maxlength="500" placeholder="Ex.: cliente ausente, entrega no vizinho"
+                           class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-aqua-500 focus:ring-4 focus:ring-aqua-100">
+                </div>
+            </div>
+
+            <div id="estimativa-conclusao" class="rounded-xl border border-aqua-100 bg-aqua-50 p-4 text-sm text-aqua-900"></div>
+
+            <div class="flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+                <button type="button" onclick="fecharConcluir()"
+                        class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
+                <button type="submit" id="btn-concluir"
+                        class="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-emerald-600/20 transition hover:bg-emerald-700 disabled:opacity-60">
+                    Confirmar entrega
+                </button>
+            </div>
+        </form>
+
+        <div id="resultado-conclusao" class="hidden"></div>
+    </div>
+</dialog>
+
+<script src="/assets/js/api.js"></script>
+<script>
+    const { API, UI, requireRole, comBotao } = window.Aqua;
+    const el = (id) => document.getElementById(id);
+
+    const estado = {
+        motorista: null,
+        pedidos: [],
+        estoque: null,
+        concluindo: null
+    };
+
+    document.addEventListener('DOMContentLoaded', iniciar);
+
+    async function iniciar() {
+        try {
+            await requireRole('ENTREGADOR');
+            await carregarTudo();
+            el('loading').classList.add('hidden');
+            el('conteudo').classList.remove('hidden');
+            setInterval(atualizarRotaEmSegundoPlano, 30000);
+        } catch (erro) {
+            el('loading').innerHTML = '<div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">'
+                + UI.escapeHtml(erro.message || 'Nao foi possivel carregar a rota.') + '</div>';
+        }
+    }
+
+    async function atualizarRotaEmSegundoPlano() {
+        if (document.hidden) return;
+        try {
+            const [motorista, pedidos, estoque] = await Promise.all([
+                API.get('/entregador/me'),
+                API.get('/entregador/pedidos'),
+                API.get('/entregador/estoque')
+            ]);
+            estado.motorista = motorista;
+            estado.pedidos = pedidos;
+            estado.estoque = estoque;
+            renderMotorista();
+            renderEstoque();
+            renderPedidos();
+        } catch (erro) {
+            // A proxima acao do usuario apresenta o erro se necessario.
+        }
+    }
+
+    async function carregarTudo() {
+        const [motorista, pedidos, estoque] = await Promise.all([
+            API.get('/entregador/me'),
+            API.get('/entregador/pedidos'),
+            API.get('/entregador/estoque')
+        ]);
+        estado.motorista = motorista;
+        estado.pedidos = pedidos;
+        estado.estoque = estoque;
+        renderMotorista();
+        renderEstoque();
+        renderPedidos();
+    }
+
+    function renderMotorista() {
+        const m = estado.motorista;
+        el('motorista-nome').textContent = m.nome;
+        el('motorista-email').textContent = m.email;
+        el('motorista-zona').textContent = 'Zona ' + UI.formatarEnum(m.zona);
+        el('motorista-veiculo').textContent = [m.veiculoModelo, m.veiculoPlaca].filter(Boolean).join(' • ') || 'Veículo não informado';
+        el('carga-atual').textContent = m.cargaAtual;
+        el('capacidade').textContent = m.capacidadeCarga;
+        el('capacidade-disponivel').textContent = m.capacidadeDisponivel + ' disponíveis';
+        const percentual = m.capacidadeCarga > 0 ? Math.min(100, Math.round((m.cargaAtual / m.capacidadeCarga) * 100)) : 0;
+        el('barra-capacidade').style.width = percentual + '%';
+        el('barra-capacidade').classList.toggle('bg-rose-500', percentual >= 90);
+    }
+
+    function renderEstoque() {
+        const estoque = estado.estoque;
+        el('qtd-estoque').textContent = estoque.vasilhames.length;
+        const itens = estoque.itens || [];
+        el('estoque-itens').innerHTML = itens.length === 0
+            ? '<p class="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">Nenhum garrafão carregado. Inicie o trânsito de um pedido.</p>'
+            : itens.map(item => `
+                <div class="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2">
+                    <span class="text-sm font-semibold text-slate-700">${UI.escapeHtml(item.produtoNome)}</span>
+                    <span class="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-bold text-indigo-700">${item.quantidade} un.</span>
+                </div>
+            `).join('');
+
+        el('estoque-codigos').innerHTML = estoque.vasilhames.length === 0
+            ? '<p class="text-slate-500">Sem vasilhames em trânsito.</p>'
+            : estoque.vasilhames.map(v => `
+                <div class="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2 py-1">
+                    <span class="font-mono font-bold text-slate-700">${UI.escapeHtml(v.codigo)}</span>
+                    <span class="text-slate-500">${UI.escapeHtml(v.produtoNome)} • ${UI.formatarData(v.dataValidade)}</span>
+                </div>
+            `).join('');
+    }
+
+    function renderPedidos() {
+        const container = el('pedidos');
+        el('qtd-pedidos').textContent = estado.pedidos.length;
+
+        if (estado.pedidos.length === 0) {
+            container.innerHTML = `
+                <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center xl:col-span-2">
+                    <p class="text-3xl">🛣️</p>
+                    <p class="mt-2 text-sm font-semibold text-slate-700">Nenhum pedido atribuído no momento.</p>
+                    <p class="mt-1 text-xs text-slate-500">Novos pedidos da sua zona aparecerão aqui automaticamente.</p>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = estado.pedidos.map(pedido => {
+            const itens = pedido.itens.map(item => `
+                <div class="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-1.5 text-xs">
+                    <span class="font-semibold text-slate-700">${UI.escapeHtml(item.produtoNome)}</span>
+                    <span class="text-slate-500">${item.quantidade} un. • devolve ${item.vasilhamesDevolvidos}</span>
+                </div>
+            `).join('');
+
+            const acao = pedido.status === 'ATRIBUIDO'
+                ? `<button type="button" data-iniciar="${pedido.id}"
+                        class="rounded-xl bg-aqua-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-aqua-700">
+                        Iniciar trânsito
+                   </button>`
+                : `<button type="button" data-concluir="${pedido.id}"
+                        class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700">
+                        Concluir entrega
+                   </button>`;
+
+            return `
+                <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-base font-bold text-slate-900">Pedido #${pedido.id}</h3>
+                                ${UI.statusBadge(pedido.status)}
+                            </div>
+                            <p class="mt-1 text-xs text-slate-500">Criado em ${UI.formatarDataHora(pedido.criadoEm)} • ${UI.formatarEnum(pedido.formaPagamento)}</p>
+                        </div>
+                        <p class="text-lg font-black text-slate-900">${UI.money(pedido.valorTotal)}</p>
+                    </div>
+
+                    <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                        <div class="rounded-xl border border-slate-100 p-3">
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Cliente</p>
+                            <p class="mt-1 text-sm font-bold text-slate-800">${UI.escapeHtml(pedido.clienteNome)}</p>
+                            <p class="text-xs text-slate-500">${UI.escapeHtml(pedido.clienteTelefone || 'Telefone não informado')}</p>
+                            <p class="mt-2 text-xs leading-relaxed text-slate-600">${UI.escapeHtml(UI.enderecoTexto(pedido.enderecoEntrega))}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Carga</p>
+                            <div class="mt-1.5 space-y-1.5">${itens}</div>
+                        </div>
+                    </div>
+
+                    ${pedido.observacao ? `<p class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">Obs.: ${UI.escapeHtml(pedido.observacao)}</p>` : ''}
+
+                    <div class="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                        <span class="text-xs text-slate-500">
+                            ${pedido.status === 'EM_TRANSITO' ? 'Em rota desde ' + UI.formatarDataHora(pedido.despachadoEm) : 'Aguardando início do deslocamento'}
+                        </span>
+                        ${acao}
+                    </div>
+                </article>
+            `;
+        }).join('');
+
+        container.querySelectorAll('[data-iniciar]').forEach(botao => {
+            botao.addEventListener('click', async () => {
+                await comBotao(botao, async () => {
+                    try {
+                        await API.post(`/entregador/pedidos/${botao.dataset.iniciar}/iniciar-transito`);
+                        UI.toast('Trânsito iniciado. Estoque do veículo atualizado.');
+                        await carregarTudo();
+                    } catch (erro) {
+                        UI.erro(erro.message);
+                    }
+                });
+            });
+        });
+
+        container.querySelectorAll('[data-concluir]').forEach(botao => {
+            botao.addEventListener('click', () => abrirConcluir(botao.dataset.concluir));
+        });
+    }
+
+    async function abrirConcluir(id) {
+        const pedido = estado.pedidos.find(p => String(p.id) === String(id));
+        if (!pedido) return;
+
+        estado.concluindo = { pedido, vasilhames: [] };
+        el('form-concluir').classList.remove('hidden');
+        el('resultado-conclusao').classList.add('hidden');
+        el('resultado-conclusao').innerHTML = '';
+        el('concluir-titulo').textContent = 'Pedido #' + pedido.id;
+        el('concluir-limites').textContent = 'Limite de devolução: '
+            + pedido.itens.map(item => item.quantidade + ' × ' + item.produtoNome).join(' • ')
+            + '. Selecione no máximo a quantidade do pedido por produto.';
+        el('pagamento-recebido').value = pedido.formaPagamento;
+        const opcaoFaturado = el('pagamento-recebido').querySelector('[value="FATURADO"]');
+        opcaoFaturado.disabled = pedido.pagamentoConfirmado;
+        opcaoFaturado.hidden = pedido.pagamentoConfirmado;
+        if (pedido.pagamentoConfirmado && el('pagamento-recebido').value === 'FATURADO') {
+            el('pagamento-recebido').value = pedido.formaPagamento;
+        }
+        el('observacao-entrega').value = '';
+        esconderErroConcluir();
+        el('concluir-resumo').innerHTML = `
+            <p class="font-bold text-slate-900">${UI.escapeHtml(pedido.clienteNome)}</p>
+            <p class="mt-1 text-xs leading-relaxed">${UI.escapeHtml(UI.enderecoTexto(pedido.enderecoEntrega))}</p>
+            <p class="mt-2 text-xs">Total atual: <strong>${UI.money(pedido.valorTotal)}</strong> • Caução: <strong>${UI.money(pedido.valorCaucao)}</strong></p>
+        `;
+        el('lista-vasilhames').innerHTML = '<p class="text-sm text-slate-500">Carregando vasilhames do cliente...</p>';
+        el('estimativa-conclusao').textContent = 'Calculando...';
+        el('dialog-concluir').showModal();
+
+        try {
+            const vasilhames = await API.get(`/entregador/pedidos/${id}/vasilhames-cliente`);
+            estado.concluindo.vasilhames = vasilhames;
+            renderVasilhamesCliente();
+        } catch (erro) {
+            el('lista-vasilhames').innerHTML = '<p class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-800">'
+                + UI.escapeHtml(erro.message) + '</p>';
+            el('estimativa-conclusao').textContent = 'Não foi possível carregar os vasilhames.';
+        }
+    }
+
+    function renderVasilhamesCliente() {
+        const vasilhames = estado.concluindo.vasilhames;
+        const limites = new Map();
+        estado.concluindo.pedido.itens.forEach(item => {
+            limites.set(String(item.produtoId), item.quantidade);
+        });
+
+        if (!vasilhames || vasilhames.length === 0) {
+            el('lista-vasilhames').innerHTML = '<p class="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500 sm:col-span-2">O cliente não possui vasilhames registrados. A caução será aplicada sobre todos os garrafões.</p>';
+        } else {
+            const marcadosPorProduto = new Map();
+            el('lista-vasilhames').innerHTML = vasilhames.map(v => {
+                const produtoId = String(v.produtoId);
+                const limite = limites.get(produtoId) || 0;
+                const jaMarcados = marcadosPorProduto.get(produtoId) || 0;
+                const marcar = !v.vencido && jaMarcados < limite;
+                if (marcar) {
+                    marcadosPorProduto.set(produtoId, jaMarcados + 1);
+                }
+
+                return `
+                    <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50">
+                        <input type="checkbox" data-codigo="${UI.escapeHtml(v.codigo)}" data-produto="${v.produtoId}"
+                               data-vencido="${v.vencido}" ${marcar ? 'checked' : ''}
+                               class="mt-0.5 h-4 w-4 rounded border-slate-300 text-aqua-600 focus:ring-aqua-500">
+                        <span class="min-w-0 flex-1">
+                            <span class="flex flex-wrap items-center justify-between gap-2">
+                                <span class="font-mono text-xs font-bold text-slate-800">${UI.escapeHtml(v.codigo)}</span>
+                                ${UI.vasilhameBadge(v)}
+                            </span>
+                            <span class="mt-1 block text-xs text-slate-500">${UI.escapeHtml(v.produtoNome)} • validade ${UI.formatarData(v.dataValidade)}</span>
+                            ${v.vencido ? '<span class="mt-1 block text-[11px] font-semibold text-rose-600">Vencido: será recusado na troca e gerará caução.</span>' : ''}
+                        </span>
+                    </label>
+                `;
+            }).join('');
+        }
+        atualizarEstimativa();
+    }
+
+    function limiteDoProduto(produtoId) {
+        if (!estado.concluindo) return 0;
+        const item = estado.concluindo.pedido.itens.find(i => String(i.produtoId) === String(produtoId));
+        return item ? item.quantidade : 0;
+    }
+
+    el('lista-vasilhames').addEventListener('change', (evento) => {
+        const input = evento.target;
+        if (!input.matches('input[type="checkbox"]')) return;
+
+        if (input.checked) {
+            const produtoId = input.dataset.produto;
+            const limite = limiteDoProduto(produtoId);
+            const marcados = [...el('lista-vasilhames').querySelectorAll('input[type="checkbox"]:checked')]
+                .filter(item => item.dataset.produto === produtoId)
+                .length;
+
+            if (marcados > limite) {
+                input.checked = false;
+                mostrarErroConcluir('Este pedido possui apenas ' + limite
+                    + ' garrafão(ões) deste produto. Selecione no máximo ' + limite
+                    + ' vasilhame(s) para devolução.');
+                el('concluir-erro').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                esconderErroConcluir();
+            }
+        } else {
+            esconderErroConcluir();
+        }
+
+        atualizarEstimativa();
+    });
+
+    function esconderErroConcluir() {
+        el('concluir-erro').classList.add('hidden');
+        el('concluir-erro').textContent = '';
+    }
+
+    function mostrarErroConcluir(mensagem) {
+        el('concluir-erro').textContent = mensagem;
+        el('concluir-erro').classList.remove('hidden');
+    }
+
+    function atualizarEstimativa() {
+        if (!estado.concluindo) return;
+        const selecionados = [...el('lista-vasilhames').querySelectorAll('input[type="checkbox"]:checked')];
+        el('contador-selecionados').textContent = selecionados.length + ' selecionado(s)';
+
+        const validosPorProduto = {};
+        let vencidosSelecionados = 0;
+        selecionados.forEach(input => {
+            if (input.dataset.vencido === 'true') {
+                vencidosSelecionados++;
+            } else {
+                const produtoId = input.dataset.produto;
+                validosPorProduto[produtoId] = (validosPorProduto[produtoId] || 0) + 1;
+            }
+        });
+
+        const pedido = estado.concluindo.pedido;
+        let caucao = 0;
+        pedido.itens.forEach(item => {
+            const devolvidos = Math.min(validosPorProduto[item.produtoId] || 0, item.quantidade);
+            const faltantes = Math.max(0, item.quantidade - devolvidos);
+            caucao += faltantes * Number(item.taxaCaucaoAplicada);
+        });
+        const total = Number(pedido.valorProdutos) + caucao;
+
+        el('estimativa-conclusao').innerHTML = `
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-aqua-700">Estimativa com a troca atual</p>
+                    <p class="mt-1 text-xs text-aqua-800/80">
+                        ${vencidosSelecionados > 0
+                            ? vencidosSelecionados + ' vasilhame(s) vencido(s) selecionado(s): recusados e cobrados como faltantes.'
+                            : 'Nenhum vasilhame vencido selecionado.'}
+                    </p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-aqua-800">Caução: <strong>${UI.money(caucao)}</strong></p>
+                    <p class="text-lg font-black">${UI.money(total)}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    el('form-concluir').addEventListener('submit', async (evento) => {
+        evento.preventDefault();
+        if (!estado.concluindo) return;
+
+        const codigos = [...el('lista-vasilhames').querySelectorAll('input[type="checkbox"]:checked')]
+            .map(input => input.dataset.codigo);
+
+        for (const item of estado.concluindo.pedido.itens) {
+            const marcados = [...el('lista-vasilhames').querySelectorAll('input[type="checkbox"]:checked')]
+                .filter(input => input.dataset.produto === String(item.produtoId))
+                .length;
+            if (marcados > item.quantidade) {
+                mostrarErroConcluir('Este pedido possui apenas ' + item.quantidade
+                    + ' garrafão(ões) de ' + item.produtoNome + '. Selecione no máximo '
+                    + item.quantidade + ' vasilhame(s).');
+                el('concluir-erro').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                return;
+            }
+        }
+
+        esconderErroConcluir();
+
+        await comBotao(el('btn-concluir'), async () => {
+            try {
+                const pedido = await API.post(`/entregador/pedidos/${estado.concluindo.pedido.id}/concluir`, {
+                    codigosVasilhamesDevolvidos: codigos,
+                    formaPagamentoRecebida: el('pagamento-recebido').value,
+                    observacao: el('observacao-entrega').value.trim() || null
+                });
+
+                const recusados = pedido.itens.reduce((s, i) => s + i.vasilhamesRecusadosVencidos, 0);
+                const aceitos = pedido.itens.reduce((s, i) => s + i.vasilhamesValidosRecebidos, 0);
+
+                el('form-concluir').classList.add('hidden');
+                esconderErroConcluir();
+                const resultado = el('resultado-conclusao');
+                resultado.classList.remove('hidden');
+                resultado.innerHTML = `
+                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-950">
+                        <p class="text-xs font-bold uppercase tracking-wider text-emerald-700">Entrega confirmada</p>
+                        <h3 class="mt-1 text-xl font-black">Pedido #${pedido.id} entregue</h3>
+                        <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                            <div class="rounded-xl bg-white/70 p-3">
+                                <p class="text-xs text-emerald-700">Total final</p>
+                                <p class="text-lg font-black">${UI.money(pedido.valorTotal)}</p>
+                            </div>
+                            <div class="rounded-xl bg-white/70 p-3">
+                                <p class="text-xs text-emerald-700">Caução aplicada</p>
+                                <p class="text-lg font-black">${UI.money(pedido.valorCaucao)}</p>
+                            </div>
+                            <div class="rounded-xl bg-white/70 p-3">
+                                <p class="text-xs text-emerald-700">Vasilhames</p>
+                                <p class="text-lg font-black">${aceitos} aceito(s)</p>
+                                <p class="text-xs">${recusados} recusado(s) por validade</p>
+                            </div>
+                        </div>
+                        <p class="mt-3 text-xs text-emerald-800">Pagamento: ${UI.formatarEnum(pedido.formaPagamento)}. Estoque do veículo e central atualizados.</p>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button type="button" onclick="fecharConcluir(true)"
+                                class="rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-emerald-800">
+                            Fechar e atualizar rota
+                        </button>
+                    </div>
+                `;
+                UI.toast('Entrega do pedido #' + pedido.id + ' concluída.');
+            } catch (erro) {
+                mostrarErroConcluir(erro.message);
+                el('concluir-erro').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+    });
+
+    async function fecharConcluir(atualizar) {
+        el('dialog-concluir').close();
+        esconderErroConcluir();
+        estado.concluindo = null;
+        if (atualizar) {
+            try {
+                await carregarTudo();
+            } catch (erro) {
+                UI.erro(erro.message);
+            }
+        }
+    }
+
+    window.fecharConcluir = fecharConcluir;
+
+    el('btn-atualizar').addEventListener('click', async (evento) => {
+        await comBotao(evento.currentTarget, async () => {
+            try {
+                await carregarTudo();
+                UI.toast('Rota atualizada.');
+            } catch (erro) {
+                UI.erro(erro.message);
+            }
+        });
+    });
+</script>
+</body>
+</html>

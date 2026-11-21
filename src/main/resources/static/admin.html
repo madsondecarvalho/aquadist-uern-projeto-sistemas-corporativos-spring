@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaDist — Administração</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💧</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        aqua: {
+                            50: '#ecfeff', 100: '#cffafe', 200: '#a5f3fc', 300: '#67e8f9',
+                            400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2', 700: '#0e7490',
+                            800: '#155e75', 900: '#164e63'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="stylesheet" href="/assets/css/app.css">
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-800">
+<header class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 lg:px-8">
+        <a href="/admin.html" class="flex items-center gap-2.5">
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-xl text-white shadow-md">💧</span>
+            <span>
+                <span class="block text-lg font-bold leading-5 tracking-tight text-slate-900">AquaDist</span>
+                <span class="block text-[11px] font-medium uppercase tracking-wider text-aqua-700">Administração</span>
+            </span>
+        </a>
+
+        <div class="flex items-center gap-3">
+            <div class="hidden text-right sm:block">
+                <p class="text-sm font-semibold text-slate-900" data-user-name>—</p>
+                <p class="text-xs text-slate-500">Administrador</p>
+            </div>
+            <button type="button" onclick="Aqua.logout()"
+                    class="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700">
+                Sair
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="mx-auto max-w-7xl px-4 py-6 lg:px-8">
+    <div id="loading" class="flex min-h-[55vh] items-center justify-center">
+        <div class="flex flex-col items-center gap-3 text-slate-500">
+            <span class="h-10 w-10 animate-spin rounded-full border-4 border-aqua-200 border-t-aqua-600"></span>
+            <p class="text-sm font-medium">Carregando painel administrativo...</p>
+        </div>
+    </div>
+
+    <div id="conteudo" class="hidden space-y-6">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+            <div>
+                <p class="text-xs font-bold uppercase tracking-widest text-aqua-700">Visão geral</p>
+                <h1 class="mt-1 text-2xl font-black tracking-tight text-slate-900">Operação AquaDist</h1>
+            </div>
+            <button type="button" id="btn-atualizar"
+                    class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 shadow-sm transition hover:bg-slate-50">
+                Atualizar dados
+            </button>
+        </div>
+
+        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Pedidos em aberto</p>
+                <p class="mt-2 text-3xl font-black text-amber-600" id="resumo-abertos">0</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Entregues</p>
+                <p class="mt-2 text-3xl font-black text-emerald-600" id="resumo-entregues">0</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Clientes</p>
+                <p class="mt-2 text-3xl font-black text-slate-900" id="resumo-clientes">0</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Entregadores</p>
+                <p class="mt-2 text-3xl font-black text-slate-900" id="resumo-entregadores">0</p>
+            </div>
+            <div class="rounded-2xl bg-gradient-to-br from-aqua-700 to-cyan-600 p-5 text-white shadow-lg shadow-aqua-700/20">
+                <p class="text-xs font-semibold uppercase tracking-wider text-cyan-100">Estoque central</p>
+                <p class="mt-2 text-3xl font-black" id="resumo-estoque">0</p>
+                <p class="text-[11px] text-cyan-100">garrafões válidos</p>
+            </div>
+        </section>
+
+        <nav class="flex flex-wrap gap-1 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">
+            <button type="button" data-tab="pedidos" class="tab-ativo rounded-xl px-4 py-2 text-sm font-bold">Pedidos</button>
+            <button type="button" data-tab="clientes" class="rounded-xl px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-100">Clientes</button>
+            <button type="button" data-tab="entregadores" class="rounded-xl px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-100">Entregadores</button>
+            <button type="button" data-tab="estoque" class="rounded-xl px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-100">Estoque e produtos</button>
+        </nav>
+
+        <!-- PEDIDOS -->
+        <section data-section="pedidos" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-lg font-bold tracking-tight text-slate-900">Pedidos</h2>
+                    <p class="mt-1 text-sm text-slate-500">Atribuição manual, acompanhamento e status.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" id="btn-novo-pedido"
+                            class="rounded-xl bg-aqua-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-aqua-700">
+                        + Novo pedido
+                    </button>
+                    <label for="filtro-status" class="ml-2 text-xs font-semibold text-slate-500">Filtrar</label>
+                    <select id="filtro-status" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-aqua-500">
+                        <option value="">Todos</option>
+                        <option value="PENDENTE">Pendente</option>
+                        <option value="ATRIBUIDO">Atribuído</option>
+                        <option value="EM_TRANSITO">Em trânsito</option>
+                        <option value="ENTREGUE">Entregue</option>
+                        <option value="CANCELADO">Cancelado</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-scroll mt-4 overflow-x-auto">
+                <table class="w-full min-w-[1120px] text-left text-sm">
+                    <thead class="text-xs uppercase tracking-wide text-slate-500">
+                    <tr>
+                        <th class="px-3 py-3">Pedido</th>
+                        <th class="px-3 py-3">Cliente</th>
+                        <th class="px-3 py-3">Status</th>
+                        <th class="px-3 py-3">Total</th>
+                        <th class="px-3 py-3">Pagamento</th>
+                        <th class="px-3 py-3">Entregador</th>
+                        <th class="px-3 py-3 text-right">Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tabela-pedidos" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- CLIENTES -->
+        <section data-section="clientes" class="hidden space-y-4">
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-lg font-bold tracking-tight text-slate-900">Clientes</h2>
+                        <p class="mt-1 text-sm text-slate-500">Cadastro, limite de crédito e baixa de pagamentos.</p>
+                        <p class="mt-1 text-xs text-slate-400">
+                            “Registrar pagamento” fica disponível apenas quando o cliente possui saldo devedor.
+                            Para receber um pedido, use “Confirmar pagamento” na aba Pedidos.
+                        </p>
+                    </div>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600" id="contador-clientes">0 clientes</span>
+                </div>
+
+                <details class="mt-4 rounded-xl border border-slate-200 bg-slate-50">
+                    <summary class="cursor-pointer px-4 py-3 text-sm font-bold text-slate-700">+ Cadastrar novo cliente</summary>
+                    <form id="form-cliente" class="grid gap-3 border-t border-slate-200 p-4 md:grid-cols-3">
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Nome</label>
+                            <input id="cli-nome" required maxlength="120" class="campo">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">E-mail</label>
+                            <input id="cli-email" type="email" required maxlength="180" class="campo">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Senha</label>
+                            <input id="cli-senha" type="password" required minlength="6" maxlength="60" class="campo" placeholder="mínimo 6 caracteres">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Tipo</label>
+                            <select id="cli-tipo" required class="campo">
+                                <option value="RESIDENCIAL">Residencial</option>
+                                <option value="CORPORATIVO">Corporativo</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">CPF/CNPJ</label>
+                            <input id="cli-documento" required maxlength="20" class="campo">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Telefone</label>
+                            <input id="cli-telefone" maxlength="30" class="campo">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Logradouro</label>
+                            <input id="cli-logradouro" required maxlength="150" class="campo">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Número</label>
+                            <input id="cli-numero" required maxlength="20" class="campo">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Complemento</label>
+                            <input id="cli-complemento" maxlength="80" class="campo">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Bairro</label>
+                            <input id="cli-bairro" required maxlength="100" class="campo">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Cidade</label>
+                            <input id="cli-cidade" required maxlength="100" class="campo" value="São Paulo">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="mb-1 block text-xs font-bold text-slate-500">UF</label>
+                                <input id="cli-uf" required maxlength="2" class="campo" value="SP">
+                            </div>
+                            <div>
+                                <label class="mb-1 block text-xs font-bold text-slate-500">CEP</label>
+                                <input id="cli-cep" required maxlength="10" class="campo">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Zona</label>
+                            <select id="cli-zona" required class="campo">
+                                <option value="CENTRO">Centro</option>
+                                <option value="NORTE">Norte</option>
+                                <option value="SUL">Sul</option>
+                                <option value="LESTE">Leste</option>
+                                <option value="OESTE">Oeste</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Limite de crédito</label>
+                            <input id="cli-limite" type="number" step="0.01" min="0" value="0" class="campo">
+                            <p class="mt-1 text-[11px] text-slate-500">Obrigatório maior que zero para corporativo.</p>
+                        </div>
+                        <div class="flex items-end md:col-span-3">
+                            <button type="submit" class="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white hover:bg-slate-800">Cadastrar cliente</button>
+                        </div>
+                    </form>
+                </details>
+
+                <div class="table-scroll mt-4 overflow-x-auto">
+                    <table class="w-full min-w-[980px] text-left text-sm">
+                        <thead class="text-xs uppercase tracking-wide text-slate-500">
+                        <tr>
+                            <th class="px-3 py-3">Cliente</th>
+                            <th class="px-3 py-3">Tipo</th>
+                            <th class="px-3 py-3">Zona</th>
+                            <th class="px-3 py-3">Limite</th>
+                            <th class="px-3 py-3">Saldo devedor</th>
+                            <th class="px-3 py-3 text-right">Ações</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tabela-clientes" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ENTREGADORES -->
+        <section data-section="entregadores" class="hidden space-y-4">
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-lg font-bold tracking-tight text-slate-900">Entregadores</h2>
+                        <p class="mt-1 text-sm text-slate-500">Capacidade de carga e zona de atuação usadas na RN03.</p>
+                    </div>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600" id="contador-entregadores">0 entregadores</span>
+                </div>
+
+                <details class="mt-4 rounded-xl border border-slate-200 bg-slate-50">
+                    <summary class="cursor-pointer px-4 py-3 text-sm font-bold text-slate-700">+ Cadastrar novo entregador</summary>
+                    <form id="form-entregador" class="grid gap-3 border-t border-slate-200 p-4 md:grid-cols-3">
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Nome</label>
+                            <input id="ent-nome" required maxlength="120" class="campo">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">E-mail</label>
+                            <input id="ent-email" type="email" required maxlength="180" class="campo">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Senha</label>
+                            <input id="ent-senha" type="password" required minlength="6" maxlength="60" class="campo">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Telefone</label>
+                            <input id="ent-telefone" maxlength="30" class="campo">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Zona</label>
+                            <select id="ent-zona" required class="campo">
+                                <option value="CENTRO">Centro</option>
+                                <option value="NORTE">Norte</option>
+                                <option value="SUL">Sul</option>
+                                <option value="LESTE">Leste</option>
+                                <option value="OESTE">Oeste</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Capacidade (garrafões)</label>
+                            <input id="ent-capacidade" type="number" min="1" required value="40" class="campo">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Modelo do veículo</label>
+                            <input id="ent-modelo" maxlength="80" class="campo">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Placa</label>
+                            <input id="ent-placa" maxlength="10" class="campo">
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit" class="w-full rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white hover:bg-slate-800">Cadastrar entregador</button>
+                        </div>
+                    </form>
+                </details>
+
+                <div class="table-scroll mt-4 overflow-x-auto">
+                    <table class="w-full min-w-[900px] text-left text-sm">
+                        <thead class="text-xs uppercase tracking-wide text-slate-500">
+                        <tr>
+                            <th class="px-3 py-3">Entregador</th>
+                            <th class="px-3 py-3">Zona</th>
+                            <th class="px-3 py-3">Veículo</th>
+                            <th class="px-3 py-3">Capacidade</th>
+                            <th class="px-3 py-3">Carga atual</th>
+                            <th class="px-3 py-3">Disponível</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tabela-entregadores" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ESTOQUE -->
+        <section data-section="estoque" class="hidden space-y-4">
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-lg font-bold tracking-tight text-slate-900">Estoque de garrafões</h2>
+                        <p class="mt-1 text-sm text-slate-500">Rastreamento por vasilhame: central, em trânsito, com clientes e descartados.</p>
+                    </div>
+                    <div class="flex gap-2 text-xs">
+                        <span class="rounded-full bg-emerald-50 px-3 py-1 font-bold text-emerald-700" id="estoque-total">0 disponíveis</span>
+                        <span class="rounded-full bg-rose-50 px-3 py-1 font-bold text-rose-700" id="estoque-vencidos">0 vencidos</span>
+                    </div>
+                </div>
+
+                <div class="table-scroll mt-4 overflow-x-auto">
+                    <table class="w-full min-w-[900px] text-left text-sm">
+                        <thead class="text-xs uppercase tracking-wide text-slate-500">
+                        <tr>
+                            <th class="px-3 py-3">Produto</th>
+                            <th class="px-3 py-3 text-right">Na central</th>
+                            <th class="px-3 py-3 text-right">Em trânsito</th>
+                            <th class="px-3 py-3 text-right">Com clientes</th>
+                            <th class="px-3 py-3 text-right">Vencidos</th>
+                            <th class="px-3 py-3 text-right">Descartados</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tabela-estoque" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="grid gap-4 lg:grid-cols-2">
+                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500">Novo produto</h3>
+                    <form id="form-produto" class="mt-4 grid gap-3 sm:grid-cols-2">
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Código</label>
+                            <input id="prod-codigo" required maxlength="20" class="campo" placeholder="G15">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Nome</label>
+                            <input id="prod-nome" required maxlength="100" class="campo" placeholder="Garrafão 15L">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Volume (L)</label>
+                            <input id="prod-volume" type="number" min="1" required class="campo" value="15">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Preço unitário</label>
+                            <input id="prod-preco" type="number" step="0.01" min="0.01" required class="campo" value="10.00">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Taxa de caução</label>
+                            <input id="prod-caucao" type="number" step="0.01" min="0" required class="campo" value="22.00">
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit" class="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-800">Criar produto</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500">Repor estoque central</h3>
+                    <form id="form-repor" class="mt-4 grid gap-3 sm:grid-cols-2" autocomplete="off">
+                        <div class="sm:col-span-2">
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Produto</label>
+                            <select id="rep-produto" required class="campo"></select>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Quantidade</label>
+                            <input id="rep-quantidade" type="number" min="1" required class="campo" placeholder="Ex.: 20">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-bold text-slate-500">Validade</label>
+                            <input id="rep-validade" type="date" required class="campo">
+                        </div>
+                        <div class="sm:col-span-2 flex flex-col gap-2 sm:flex-row">
+                            <button type="submit" class="flex-1 rounded-xl bg-aqua-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-aqua-700">Adicionar lote ao estoque</button>
+                            <button type="button" id="btn-limpar-repor"
+                                    class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50">
+                                Limpar
+                            </button>
+                        </div>
+                    </form>
+                    <p class="mt-3 text-xs leading-relaxed text-slate-500">
+                        Os campos começam vazios e são limpos automaticamente após o sucesso.
+                        Cada unidade recebe um código único e passa a ser rastreada individualmente (RN05).
+                    </p>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<dialog id="dialog-pagamento" class="w-[min(94vw,720px)] rounded-2xl border-0 p-0 shadow-2xl">
+    <div class="flex items-start justify-between gap-4 rounded-t-2xl border-b border-slate-200 bg-slate-50 px-6 py-4">
+        <div class="flex items-center gap-3">
+            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-xl text-emerald-700">💳</span>
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-emerald-700">Contas a receber</p>
+                <h2 class="mt-0.5 text-xl font-bold text-slate-900">Registrar pagamento</h2>
+            </div>
+        </div>
+        <button type="button" data-fechar-pagamento
+                class="rounded-lg px-2.5 py-1.5 text-sm font-bold text-slate-500 hover:bg-slate-200">Fechar</button>
+    </div>
+
+    <div class="max-h-[78vh] overflow-y-auto px-6 py-5">
+        <div id="pagamento-cliente" class="rounded-xl border border-slate-200 bg-white p-4"></div>
+
+        <div class="mt-3 grid gap-3 sm:grid-cols-3">
+            <div class="rounded-xl bg-rose-50 p-3 ring-1 ring-rose-100">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-rose-500">Saldo devedor</p>
+                <p id="pagamento-saldo" class="mt-1 text-lg font-black text-rose-700">—</p>
+            </div>
+            <div class="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Limite mensal</p>
+                <p id="pagamento-limite" class="mt-1 text-lg font-black text-slate-800">—</p>
+            </div>
+            <div class="rounded-xl bg-emerald-50 p-3 ring-1 ring-emerald-100">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Limite disponível</p>
+                <p id="pagamento-disponivel" class="mt-1 text-lg font-black text-emerald-700">—</p>
+            </div>
+        </div>
+
+        <form id="form-pagamento" class="mt-5 space-y-4">
+            <div class="grid gap-3 sm:grid-cols-2">
+                <div>
+                    <label for="pagamento-valor" class="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500">Valor recebido</label>
+                    <div class="relative">
+                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm font-semibold text-slate-400">R$</span>
+                        <input id="pagamento-valor" type="number" step="0.01" min="0.01" required
+                               class="campo campo-prefixo text-base font-bold" placeholder="0,00">
+                    </div>
+                    <button type="button" id="btn-saldo-total"
+                            class="mt-1.5 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 hover:bg-slate-200">
+                        Usar saldo total
+                    </button>
+                </div>
+                <div>
+                    <label for="pagamento-descricao" class="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500">Descrição</label>
+                    <input id="pagamento-descricao" maxlength="200" class="campo"
+                           placeholder="Ex.: PIX recebido, boleto compensado">
+                    <p class="mt-1.5 text-[11px] leading-relaxed text-slate-500">Opcional. Ajuda na conciliação do recebimento.</p>
+                </div>
+            </div>
+
+            <div id="pagamento-erro" class="hidden rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-800"></div>
+
+            <div class="flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+                <button type="button" data-fechar-pagamento
+                        class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50">
+                    Cancelar
+                </button>
+                <button type="submit" id="btn-confirmar-pagamento"
+                        class="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-emerald-600/20 transition hover:bg-emerald-700 disabled:opacity-60">
+                    Confirmar pagamento
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-6 border-t border-slate-100 pt-5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900">Últimos pagamentos</h3>
+                    <p class="text-xs text-slate-500">Histórico mais recente deste cliente.</p>
+                </div>
+                <span id="pagamento-historico-total" class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600">—</span>
+            </div>
+            <div id="pagamento-historico" class="mt-3 max-h-44 space-y-2 overflow-y-auto"></div>
+        </div>
+    </div>
+</dialog>
+
+<dialog id="dialog-novo-pedido" class="w-[min(96vw,900px)] rounded-2xl border-0 p-0 shadow-2xl">
+    <div class="flex items-start justify-between gap-4 rounded-t-2xl border-b border-slate-200 bg-aqua-50 px-6 py-4">
+        <div class="flex items-center gap-3">
+            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-aqua-100 text-xl text-aqua-700">🧾</span>
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-aqua-700">Pedido assistido</p>
+                <h2 class="mt-0.5 text-xl font-bold text-slate-900">Novo pedido para cliente</h2>
+            </div>
+        </div>
+        <button type="button" data-fechar-novo-pedido
+                class="rounded-lg px-2.5 py-1.5 text-sm font-bold text-slate-500 hover:bg-aqua-100">Fechar</button>
+    </div>
+
+    <div class="max-h-[80vh] overflow-y-auto px-6 py-5">
+        <div id="np-erro" class="sticky top-0 z-10 mb-3 hidden rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-800 shadow-sm"></div>
+
+        <form id="form-novo-pedido" class="space-y-4" novalidate>
+            <div>
+                <label for="np-cliente" class="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500">Cliente</label>
+                <select id="np-cliente" class="campo" required>
+                    <option value="">Selecione um cliente...</option>
+                </select>
+                <div id="np-cliente-info" class="mt-2 hidden rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600"></div>
+            </div>
+
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Itens do pedido</h3>
+                        <p class="text-xs text-slate-500">Adicione os produtos e informe quantos vasilhames o cliente devolve.</p>
+                    </div>
+                    <span class="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-500 ring-1 ring-slate-200" id="np-itens-contador">0 item(ns)</span>
+                </div>
+
+                <div class="mt-3 grid gap-2 md:grid-cols-[1fr_90px_100px_auto]">
+                    <select id="np-produto" class="campo" aria-label="Produto"></select>
+                    <input id="np-quantidade" type="number" min="1" placeholder="Qtd." class="campo" aria-label="Quantidade">
+                    <input id="np-devolvidos" type="number" min="0" placeholder="Devolve" class="campo" aria-label="Vasilhames devolvidos">
+                    <button type="button" id="np-adicionar"
+                            class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white hover:bg-slate-800">
+                        Adicionar
+                    </button>
+                </div>
+                <p id="np-ajuda-devolucao" class="mt-2 text-xs text-slate-500">Selecione um cliente e um produto.</p>
+                <div id="np-carrinho" class="mt-3 space-y-2"></div>
+            </div>
+
+            <div class="grid gap-3 md:grid-cols-2">
+                <div>
+                    <label for="np-forma" class="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500">Forma de pagamento</label>
+                    <select id="np-forma" class="campo">
+                        <option value="PIX">PIX</option>
+                        <option value="DINHEIRO">Dinheiro</option>
+                        <option value="CARTAO_CREDITO">Cartão de crédito</option>
+                        <option value="CARTAO_DEBITO">Cartão de débito</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="np-observacao" class="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500">Observação</label>
+                    <input id="np-observacao" maxlength="500" class="campo" placeholder="Ex.: entregar no balcão">
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                <label class="flex cursor-pointer items-start gap-3">
+                    <input id="np-pagamento-confirmado" type="checkbox"
+                           class="mt-0.5 h-4 w-4 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500">
+                    <span class="text-sm leading-relaxed text-emerald-950">
+                        Confirmo que recebi <strong id="np-total-confirmacao">R$ 0,00</strong>
+                        via <strong id="np-forma-confirmacao">PIX</strong>.
+                        <span class="mt-1 block text-xs text-emerald-800">
+                            O pedido será registrado como pago e um comprovante será salvo no histórico do cliente.
+                        </span>
+                    </span>
+                </label>
+            </div>
+
+            <div class="flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+                <button type="button" data-fechar-novo-pedido
+                        class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50">
+                    Cancelar
+                </button>
+                <button type="submit" id="np-criar" disabled
+                        class="rounded-xl bg-aqua-600 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-aqua-600/20 transition hover:bg-aqua-700 disabled:cursor-not-allowed disabled:opacity-50">
+                    Criar pedido e confirmar pagamento
+                </button>
+            </div>
+        </form>
+    </div>
+</dialog>
+
+<dialog id="dialog-pagamento-pedido" class="w-[min(94vw,560px)] rounded-2xl border-0 p-0 shadow-2xl">
+    <div class="flex items-start justify-between gap-4 rounded-t-2xl border-b border-slate-200 bg-emerald-50 px-6 py-4">
+        <div class="flex items-center gap-3">
+            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-xl text-emerald-700">💵</span>
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-emerald-700">Pedido <span id="pp-numero"></span></p>
+                <h2 class="mt-0.5 text-xl font-bold text-slate-900">Confirmar pagamento</h2>
+            </div>
+        </div>
+        <button type="button" data-fechar-pagamento-pedido
+                class="rounded-lg px-2.5 py-1.5 text-sm font-bold text-slate-500 hover:bg-emerald-100">Fechar</button>
+    </div>
+    <div class="px-6 py-5">
+        <div id="pp-resumo" class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"></div>
+        <div id="pp-erro" class="mt-3 hidden rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-800"></div>
+        <div class="mt-4 flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+            <button type="button" data-fechar-pagamento-pedido
+                    class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50">
+                Cancelar
+            </button>
+            <button type="button" id="pp-confirmar"
+                    class="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-emerald-600/20 transition hover:bg-emerald-700 disabled:opacity-60">
+                Confirmar recebimento
+            </button>
+        </div>
+    </div>
+</dialog>
+
+<style>
+    .campo {
+        width: 100%;
+        border-radius: 0.5rem;
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        outline: none;
+    }
+    .campo:focus {
+        border-color: #06b6d4;
+        box-shadow: 0 0 0 4px #cffafe;
+    }
+    .campo.campo-prefixo {
+        padding-left: 2.5rem;
+    }
+    .tab-ativo {
+        background: #0891b2;
+        color: #fff;
+        box-shadow: 0 6px 16px -8px rgba(8, 145, 178, .7);
+    }
+</style>
+
+<script src="/assets/js/api.js"></script>
+<script>
+    const { API, UI, requireRole, comBotao } = window.Aqua;
+    const el = (id) => document.getElementById(id);
+
+    const estado = {
+        pedidos: [],
+        clientes: [],
+        entregadores: [],
+        produtos: [],
+        estoque: null,
+        pagamentoCliente: null,
+        novoPedido: {
+            cliente: null,
+            vasilhames: null,
+            carrinho: []
+        },
+        pagamentoPedido: null
+    };
+
+    document.addEventListener('DOMContentLoaded', iniciar);
+
+    async function iniciar() {
+        try {
+            await requireRole('ADMIN');
+            configurarTabs();
+            configurarFormularios();
+            await carregarTudo();
+            el('loading').classList.add('hidden');
+            el('conteudo').classList.remove('hidden');
+            el('rep-validade').min = isoHoje();
+        } catch (erro) {
+            el('loading').innerHTML = '<div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">'
+                + UI.escapeHtml(erro.message || 'Nao foi possivel carregar o painel.') + '</div>';
+        }
+    }
+
+    function isoHoje() {
+        const agora = new Date();
+        const local = new Date(agora.getTime() - agora.getTimezoneOffset() * 60000);
+        return local.toISOString().slice(0, 10);
+    }
+
+    async function carregarTudo() {
+        const [pedidos, clientes, entregadores, produtos, estoque] = await Promise.all([
+            API.get('/admin/pedidos'),
+            API.get('/admin/clientes'),
+            API.get('/admin/entregadores'),
+            API.get('/produtos'),
+            API.get('/admin/estoque')
+        ]);
+        estado.pedidos = pedidos;
+        estado.clientes = clientes;
+        estado.entregadores = entregadores;
+        estado.produtos = produtos;
+        estado.estoque = estoque;
+        renderResumo();
+        renderPedidos();
+        renderClientes();
+        renderEntregadores();
+        renderEstoque();
+        preencherSelectProdutos();
+    }
+
+    function renderResumo() {
+        const abertos = estado.pedidos.filter(p => ['PENDENTE', 'ATRIBUIDO', 'EM_TRANSITO'].includes(p.status)).length;
+        const entregues = estado.pedidos.filter(p => p.status === 'ENTREGUE').length;
+        el('resumo-abertos').textContent = abertos;
+        el('resumo-entregues').textContent = entregues;
+        el('resumo-clientes').textContent = estado.clientes.length;
+        el('resumo-entregadores').textContent = estado.entregadores.length;
+        el('resumo-estoque').textContent = estado.estoque.totalDisponiveis;
+        el('estoque-total').textContent = estado.estoque.totalDisponiveis + ' disponíveis';
+        el('estoque-vencidos').textContent = estado.estoque.totalVencidos + ' vencidos';
+    }
+
+    function opcoesEntregadores() {
+        return estado.entregadores
+            .filter(e => e.ativo)
+            .map(e => `<option value="${e.id}">${UI.escapeHtml(e.nome)} — ${UI.formatarEnum(e.zona)} — ${e.capacidadeDisponivel} livres</option>`)
+            .join('');
+    }
+
+    function renderPedidos() {
+        const filtro = el('filtro-status').value;
+        const pedidos = filtro ? estado.pedidos.filter(p => p.status === filtro) : estado.pedidos;
+        const tabela = el('tabela-pedidos');
+
+        if (pedidos.length === 0) {
+            tabela.innerHTML = '<tr><td colspan="7" class="px-3 py-10 text-center text-sm text-slate-500">Nenhum pedido para o filtro selecionado.</td></tr>';
+            return;
+        }
+
+        tabela.innerHTML = pedidos.map(p => {
+            const podeAtribuir = p.status === 'PENDENTE';
+            const podeConfirmarPagamento = !p.pagamentoConfirmado
+                && p.formaPagamento !== 'FATURADO'
+                && p.status !== 'CANCELADO';
+
+            const acoes = [];
+            if (podeAtribuir) {
+                acoes.push(`
+                    <div class="flex justify-end gap-2">
+                        <select data-select-entregador="${p.id}" class="max-w-[220px] rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-semibold text-slate-700">
+                            <option value="">Selecione...</option>
+                            ${opcoesEntregadores()}
+                        </select>
+                        <button type="button" data-atribuir="${p.id}"
+                                class="rounded-lg bg-aqua-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-aqua-700">Atribuir</button>
+                    </div>
+                `);
+            }
+            if (podeConfirmarPagamento) {
+                acoes.push(`
+                    <button type="button" data-confirmar-pagamento-pedido="${p.id}"
+                            class="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100">
+                        Confirmar pagamento
+                    </button>
+                `);
+            }
+
+            return `
+                <tr class="align-top hover:bg-slate-50">
+                    <td class="px-3 py-3">
+                        <p class="font-bold text-slate-800">#${p.id}</p>
+                        <p class="text-xs text-slate-500">${UI.formatarDataHora(p.criadoEm)}</p>
+                    </td>
+                    <td class="px-3 py-3">
+                        <p class="font-semibold text-slate-700">${UI.escapeHtml(p.clienteNome)}</p>
+                        <p class="text-xs text-slate-500">${UI.formatarEnum(p.enderecoEntrega.zona)} • ${p.totalGarrafoes} garrafões</p>
+                    </td>
+                    <td class="px-3 py-3">${UI.statusBadge(p.status)}</td>
+                    <td class="px-3 py-3">
+                        <p class="font-bold text-slate-800">${UI.money(p.valorTotal)}</p>
+                        ${p.valorCaucao > 0 ? `<p class="text-[11px] text-amber-700">caução ${UI.money(p.valorCaucao)}</p>` : ''}
+                    </td>
+                    <td class="px-3 py-3">${pagamentoBadge(p)}</td>
+                    <td class="px-3 py-3 text-slate-600">${UI.escapeHtml(p.entregadorNome || '—')}</td>
+                    <td class="px-3 py-3">
+                        ${acoes.length > 0
+                            ? `<div class="flex flex-col items-end gap-1.5">${acoes.join('')}</div>`
+                            : '<p class="text-right text-xs text-slate-400">—</p>'}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        tabela.querySelectorAll('[data-atribuir]').forEach(botao => {
+            botao.addEventListener('click', async () => {
+                const id = botao.dataset.atribuir;
+                const select = tabela.querySelector(`[data-select-entregador="${id}"]`);
+                const entregadorId = Number(select.value);
+                if (!entregadorId) return UI.erro('Selecione um entregador.');
+
+                await comBotao(botao, async () => {
+                    try {
+                        await API.post(`/admin/pedidos/${id}/atribuir`, { entregadorId });
+                        UI.toast('Pedido #' + id + ' atribuído.');
+                        await carregarTudo();
+                    } catch (erro) {
+                        UI.erro(erro.message);
+                    }
+                });
+            });
+        });
+
+        tabela.querySelectorAll('[data-confirmar-pagamento-pedido]').forEach(botao => {
+            botao.addEventListener('click', () => {
+                abrirPagamentoPedido(Number(botao.dataset.confirmarPagamentoPedido));
+            });
+        });
+    }
+
+    function pagamentoBadge(pedido) {
+        if (pedido.pagamentoConfirmado) {
+            return `
+                <span class="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">Pago</span>
+                ${pedido.pagoEm ? `<p class="mt-0.5 text-[10px] text-slate-400">${UI.formatarDataHora(pedido.pagoEm)}</p>` : ''}
+            `;
+        }
+        if (pedido.formaPagamento === 'FATURADO') {
+            return '<span class="inline-flex rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-bold text-sky-700">Faturado</span>';
+        }
+        if (pedido.status === 'CANCELADO') {
+            return '<span class="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-500">—</span>';
+        }
+        return '<span class="inline-flex rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-700">Pendente</span>';
+    }
+
+    function renderClientes() {
+        el('contador-clientes').textContent = estado.clientes.length + ' clientes';
+        const tabela = el('tabela-clientes');
+        if (estado.clientes.length === 0) {
+            tabela.innerHTML = '<tr><td colspan="6" class="px-3 py-8 text-center text-slate-500">Nenhum cliente cadastrado.</td></tr>';
+            return;
+        }
+
+        tabela.innerHTML = estado.clientes.map(c => `
+            <tr class="align-top hover:bg-slate-50">
+                <td class="px-3 py-3">
+                    <p class="font-semibold text-slate-800">${UI.escapeHtml(c.nome)}</p>
+                    <p class="text-xs text-slate-500">${UI.escapeHtml(c.email)} • ${UI.escapeHtml(c.telefone || 'sem telefone')}</p>
+                    <p class="text-xs text-slate-400">${UI.escapeHtml(c.documento)}</p>
+                </td>
+                <td class="px-3 py-3">
+                    <span class="rounded-full px-2.5 py-0.5 text-xs font-bold ${c.tipo === 'CORPORATIVO' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-100 text-slate-700'}">
+                        ${UI.formatarEnum(c.tipo)}
+                    </span>
+                </td>
+                <td class="px-3 py-3 text-slate-600">${UI.formatarEnum(c.zona)}</td>
+                <td class="px-3 py-3 text-slate-600">${c.tipo === 'CORPORATIVO' ? UI.money(c.limiteCredito) : '—'}</td>
+                <td class="px-3 py-3">
+                    <p class="font-bold ${Number(c.saldoDevedor) > 0 ? 'text-rose-600' : 'text-emerald-600'}">${UI.money(c.saldoDevedor)}</p>
+                </td>
+                <td class="px-3 py-3 text-right">
+                    <button type="button" data-pagamento="${c.id}" data-saldo="${c.saldoDevedor}"
+                            class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-40"
+                            ${Number(c.saldoDevedor) <= 0 ? 'disabled' : ''}>Registrar pagamento</button>
+                </td>
+            </tr>
+        `).join('');
+
+        tabela.querySelectorAll('[data-pagamento]').forEach(botao => {
+            botao.addEventListener('click', () => abrirPagamento(Number(botao.dataset.pagamento)));
+        });
+    }
+
+    async function abrirPagamento(clienteId) {
+        const cliente = estado.clientes.find(c => Number(c.id) === Number(clienteId));
+        if (!cliente) {
+            return UI.erro('Cliente não encontrado. Atualize o painel e tente novamente.');
+        }
+        if (Number(cliente.saldoDevedor) <= 0) {
+            return UI.erro('Este cliente não possui saldo devedor em aberto.');
+        }
+
+        estado.pagamentoCliente = cliente;
+        const corporativo = cliente.tipo === 'CORPORATIVO';
+
+        el('pagamento-cliente').innerHTML = `
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div class="flex items-start gap-3">
+                    <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-xl">
+                        ${corporativo ? '🏢' : '👤'}
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-900">${UI.escapeHtml(cliente.nome)}</p>
+                        <p class="mt-0.5 text-xs text-slate-500">${UI.escapeHtml(cliente.email)} • ${UI.escapeHtml(cliente.documento)}</p>
+                        <p class="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                            ${UI.formatarEnum(cliente.tipo)} • Zona ${UI.formatarEnum(cliente.zona)}
+                        </p>
+                    </div>
+                </div>
+                <span class="rounded-full px-2.5 py-0.5 text-xs font-bold ${corporativo ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'}">
+                    ${corporativo ? 'Corporativo' : 'Residencial'}
+                </span>
+            </div>
+        `;
+
+        el('pagamento-saldo').textContent = UI.money(cliente.saldoDevedor);
+        el('pagamento-limite').textContent = corporativo ? UI.money(cliente.limiteCredito) : 'Sem limite';
+        el('pagamento-disponivel').textContent = corporativo ? UI.money(cliente.limiteDisponivel) : '—';
+
+        const campoValor = el('pagamento-valor');
+        campoValor.value = '';
+        campoValor.max = Number(cliente.saldoDevedor).toFixed(2);
+        el('pagamento-descricao').value = '';
+        esconderErroPagamento();
+        el('pagamento-historico-total').textContent = 'Carregando...';
+        el('pagamento-historico').innerHTML = '<p class="text-sm text-slate-500">Carregando histórico...</p>';
+
+        el('dialog-pagamento').showModal();
+        setTimeout(() => campoValor.focus(), 60);
+
+        await carregarHistoricoPagamentos(cliente.id);
+    }
+
+    async function carregarHistoricoPagamentos(clienteId) {
+        try {
+            const pagamentos = await API.get(`/admin/clientes/${clienteId}/pagamentos`);
+            if (!estado.pagamentoCliente || Number(estado.pagamentoCliente.id) !== Number(clienteId)) {
+                return;
+            }
+
+            el('pagamento-historico-total').textContent = pagamentos.length + ' registro(s)';
+            if (pagamentos.length === 0) {
+                el('pagamento-historico').innerHTML = `
+                    <div class="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+                        Nenhum pagamento registrado para este cliente.
+                    </div>`;
+                return;
+            }
+
+            const ultimos = pagamentos.slice(0, 5);
+            el('pagamento-historico').innerHTML = ultimos.map(pagamento => `
+                <div class="flex items-start justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-2.5">
+                    <div>
+                        <p class="text-sm font-black text-emerald-700">${UI.money(pagamento.valor)}</p>
+                        <p class="mt-0.5 text-[11px] text-slate-500">${UI.formatarDataHora(pagamento.criadoEm)}</p>
+                        <p class="mt-0.5 text-xs text-slate-600">${UI.escapeHtml(pagamento.descricao || 'Sem descrição')}</p>
+                    </div>
+                    <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Pago</span>
+                </div>
+            `).join('') + (pagamentos.length > 5
+                ? '<p class="px-1 text-[11px] text-slate-400">Mostrando os 5 pagamentos mais recentes.</p>'
+                : '');
+        } catch (erro) {
+            el('pagamento-historico-total').textContent = '—';
+            el('pagamento-historico').innerHTML = `
+                <div class="rounded-xl bg-amber-50 px-3.5 py-2.5 text-xs text-amber-800">
+                    Não foi possível carregar o histórico: ${UI.escapeHtml(erro.message)}
+                </div>`;
+        }
+    }
+
+    function esconderErroPagamento() {
+        el('pagamento-erro').classList.add('hidden');
+        el('pagamento-erro').textContent = '';
+    }
+
+    function mostrarErroPagamento(mensagem) {
+        el('pagamento-erro').textContent = mensagem;
+        el('pagamento-erro').classList.remove('hidden');
+    }
+
+    function fecharPagamento() {
+        const dialogo = el('dialog-pagamento');
+        if (dialogo.open) {
+            dialogo.close();
+        }
+        estado.pagamentoCliente = null;
+    }
+
+    // ------------------------------------------------------------------
+    // Pedido assistido pelo administrador
+    // ------------------------------------------------------------------
+
+    function abrirNovoPedido() {
+        estado.novoPedido = { cliente: null, vasilhames: null, carrinho: [] };
+        el('form-novo-pedido').reset();
+        el('np-cliente-info').classList.add('hidden');
+        el('np-cliente-info').innerHTML = '';
+        el('np-forma').value = 'PIX';
+        esconderErroNovoPedido();
+        preencherClientesNovoPedido();
+        preencherProdutosNovoPedido();
+        renderCarrinhoNovoPedido();
+        el('dialog-novo-pedido').showModal();
+        setTimeout(() => el('np-cliente').focus(), 60);
+    }
+
+    function preencherClientesNovoPedido() {
+        const select = el('np-cliente');
+        select.innerHTML = '<option value="">Selecione um cliente...</option>' + estado.clientes
+            .filter(cliente => cliente.ativo)
+            .map(cliente => `<option value="${cliente.id}">${UI.escapeHtml(cliente.nome)} — ${UI.formatarEnum(cliente.tipo)} — ${UI.formatarEnum(cliente.zona)}</option>`)
+            .join('');
+        select.value = '';
+    }
+
+    function preencherProdutosNovoPedido() {
+        const select = el('np-produto');
+        select.innerHTML = '<option value="">Selecione...</option>' + estado.produtos
+            .filter(produto => produto.ativo)
+            .map(produto => `<option value="${produto.id}" ${produto.estoqueCentral <= 0 ? 'disabled' : ''}>
+                ${UI.escapeHtml(produto.nome)} — ${UI.money(produto.precoUnitario)}${produto.estoqueCentral <= 0 ? ' (sem estoque)' : ''}
+            </option>`)
+            .join('');
+        select.value = '';
+    }
+
+    async function selecionarClienteNovoPedido() {
+        const clienteId = Number(el('np-cliente').value);
+        const cliente = estado.clientes.find(c => Number(c.id) === clienteId) || null;
+        estado.novoPedido.cliente = cliente;
+        estado.novoPedido.vasilhames = null;
+        estado.novoPedido.carrinho = [];
+        renderCarrinhoNovoPedido();
+        renderClienteNovoPedido();
+
+        if (!cliente) {
+            return;
+        }
+
+        try {
+            const vasilhames = await API.get(`/admin/clientes/${clienteId}/vasilhames`);
+            if (estado.novoPedido.cliente && Number(estado.novoPedido.cliente.id) === clienteId) {
+                estado.novoPedido.vasilhames = vasilhames;
+                renderClienteNovoPedido();
+                atualizarAjudaNovoPedido();
+            }
+        } catch (erro) {
+            mostrarErroNovoPedido('Nao foi possivel carregar os vasilhames do cliente: ' + erro.message);
+        }
+    }
+
+    function renderClienteNovoPedido() {
+        const cliente = estado.novoPedido.cliente;
+        const box = el('np-cliente-info');
+        if (!cliente) {
+            box.classList.add('hidden');
+            box.innerHTML = '';
+            atualizarAjudaNovoPedido();
+            return;
+        }
+
+        const corporativo = cliente.tipo === 'CORPORATIVO';
+        const validos = estado.novoPedido.vasilhames
+            ? estado.novoPedido.vasilhames.totalValidos
+            : '...';
+        box.innerHTML = `
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <p class="text-sm font-bold text-slate-800">${UI.escapeHtml(cliente.nome)}</p>
+                    <p class="text-xs text-slate-500">${UI.escapeHtml(cliente.email)} • ${UI.escapeHtml(cliente.documento)}</p>
+                    <p class="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                        ${UI.formatarEnum(cliente.tipo)} • Zona ${UI.formatarEnum(cliente.zona)}
+                    </p>
+                </div>
+                <div class="text-right text-xs text-slate-500">
+                    <p>Saldo devedor: <strong class="text-slate-800">${UI.money(cliente.saldoDevedor)}</strong></p>
+                    <p>Limite: <strong class="text-slate-800">${corporativo ? UI.money(cliente.limiteCredito) : 'Sem limite'}</strong></p>
+                    <p>Vasilhames válidos: <strong class="text-slate-800">${validos}</strong></p>
+                </div>
+            </div>
+        `;
+        box.classList.remove('hidden');
+        atualizarAjudaNovoPedido();
+    }
+
+    function produtoNovoPedidoSelecionado() {
+        const produtoId = Number(el('np-produto').value);
+        return estado.produtos.find(produto => Number(produto.id) === produtoId) || null;
+    }
+
+    function vasilhamesValidosDoCliente(produtoId) {
+        if (!estado.novoPedido.vasilhames || !estado.novoPedido.vasilhames.resumo) {
+            return 0;
+        }
+        const item = estado.novoPedido.vasilhames.resumo
+            .find(resumo => Number(resumo.produtoId) === Number(produtoId));
+        return item ? item.validos : 0;
+    }
+
+    function atualizarAjudaNovoPedido() {
+        const produto = produtoNovoPedidoSelecionado();
+        const ajuda = el('np-ajuda-devolucao');
+
+        if (!estado.novoPedido.cliente) {
+            ajuda.textContent = 'Selecione um cliente para carregar os vasilhames disponíveis.';
+            el('np-devolvidos').max = '0';
+            return;
+        }
+        if (!produto) {
+            ajuda.textContent = 'Selecione um produto.';
+            el('np-devolvidos').max = '0';
+            return;
+        }
+
+        const validos = vasilhamesValidosDoCliente(produto.id);
+        const quantidade = Math.max(1, Number(el('np-quantidade').value || 1));
+        const maximo = Math.min(quantidade, validos);
+        el('np-devolvidos').max = String(maximo);
+        if (Number(el('np-devolvidos').value) > maximo) {
+            el('np-devolvidos').value = String(maximo);
+        }
+
+        ajuda.textContent = `${produto.nome}: ${validos} vasilhame(s) válido(s) em posse do cliente. `
+            + `Caução de ${UI.money(produto.taxaCaucao)} por vasilhame não devolvido.`
+            + (estado.novoPedido.vasilhames ? '' : ' Carregando vasilhames...');
+    }
+
+    function adicionarItemNovoPedido() {
+        const cliente = estado.novoPedido.cliente;
+        const produto = produtoNovoPedidoSelecionado();
+        const quantidade = Number(el('np-quantidade').value);
+        const devolvidos = Number(el('np-devolvidos').value || 0);
+
+        if (!cliente) {
+            return mostrarErroNovoPedido('Selecione um cliente antes de adicionar itens.');
+        }
+        if (!produto) {
+            return mostrarErroNovoPedido('Selecione um produto.');
+        }
+        if (!Number.isInteger(quantidade) || quantidade < 1) {
+            return mostrarErroNovoPedido('Informe uma quantidade inteira maior que zero.');
+        }
+        if (!Number.isInteger(devolvidos) || devolvidos < 0 || devolvidos > quantidade) {
+            return mostrarErroNovoPedido('A devolução deve estar entre zero e a quantidade comprada.');
+        }
+        const validos = vasilhamesValidosDoCliente(produto.id);
+        if (devolvidos > validos) {
+            return mostrarErroNovoPedido(`O cliente possui apenas ${validos} vasilhame(s) válido(s) de ${produto.nome}.`);
+        }
+        if (estado.novoPedido.carrinho.some(item => Number(item.produtoId) === Number(produto.id))) {
+            return mostrarErroNovoPedido('Este produto já está no pedido. Remova o item para alterar a quantidade.');
+        }
+        if (quantidade > produto.estoqueCentral) {
+            return mostrarErroNovoPedido(`Estoque insuficiente de ${produto.nome}. Disponível: ${produto.estoqueCentral}.`);
+        }
+
+        estado.novoPedido.carrinho.push({
+            produtoId: produto.id,
+            quantidade,
+            vasilhamesDevolvidos: devolvidos
+        });
+        el('np-quantidade').value = '';
+        el('np-devolvidos').value = '';
+        esconderErroNovoPedido();
+        renderCarrinhoNovoPedido();
+        atualizarAjudaNovoPedido();
+    }
+
+    function renderCarrinhoNovoPedido() {
+        const carrinho = estado.novoPedido.carrinho;
+        const container = el('np-carrinho');
+        el('np-itens-contador').textContent = carrinho.length + ' item(ns)';
+
+        if (carrinho.length === 0) {
+            container.innerHTML = '<div class="rounded-xl border border-dashed border-slate-300 p-4 text-center text-sm text-slate-500">Nenhum item adicionado.</div>';
+            el('np-criar').disabled = true;
+            el('np-pagamento-confirmado').checked = false;
+            atualizarConfirmacaoPagamentoNovoPedido(0);
+            return;
+        }
+
+        let totalProdutos = 0;
+        let totalCaucao = 0;
+
+        container.innerHTML = carrinho.map((item, indice) => {
+            const produto = estado.produtos.find(p => Number(p.id) === Number(item.produtoId));
+            const subtotal = Number(produto.precoUnitario) * item.quantidade;
+            const faltantes = Math.max(0, item.quantidade - item.vasilhamesDevolvidos);
+            const caucao = faltantes * Number(produto.taxaCaucao);
+            totalProdutos += subtotal;
+            totalCaucao += caucao;
+
+            return `
+                <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5">
+                    <div>
+                        <p class="text-sm font-bold text-slate-800">${UI.escapeHtml(produto.nome)}</p>
+                        <p class="text-xs text-slate-500">${item.quantidade} un. • ${item.vasilhamesDevolvidos} devolvido(s) • ${faltantes} sem troca</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-right">
+                            <p class="text-sm font-bold text-slate-900">${UI.money(subtotal + caucao)}</p>
+                            <p class="text-[11px] text-slate-500">${caucao > 0 ? UI.money(caucao) + ' de caução' : 'sem caução'}</p>
+                        </div>
+                        <button type="button" data-remover-item="${indice}"
+                                class="rounded-lg px-2 py-1 text-xs font-bold text-rose-600 hover:bg-rose-50">Remover</button>
+                    </div>
+                </div>
+            `;
+        }).join('') + `
+            <div class="flex flex-wrap justify-end gap-5 rounded-xl bg-white px-3.5 py-2.5 text-xs ring-1 ring-slate-200">
+                <span class="text-slate-500">Produtos: <strong class="text-slate-800">${UI.money(totalProdutos)}</strong></span>
+                <span class="text-slate-500">Caução: <strong class="text-slate-800">${UI.money(totalCaucao)}</strong></span>
+                <span class="text-slate-700">Total: <strong class="text-base text-aqua-700">${UI.money(totalProdutos + totalCaucao)}</strong></span>
+            </div>
+        `;
+
+        container.querySelectorAll('[data-remover-item]').forEach(botao => {
+            botao.addEventListener('click', () => {
+                estado.novoPedido.carrinho.splice(Number(botao.dataset.removerItem), 1);
+                esconderErroNovoPedido();
+                renderCarrinhoNovoPedido();
+                atualizarAjudaNovoPedido();
+            });
+        });
+
+        el('np-criar').disabled = false;
+        el('np-pagamento-confirmado').checked = false;
+        atualizarConfirmacaoPagamentoNovoPedido(totalProdutos + totalCaucao);
+    }
+
+    function totalNovoPedido() {
+        return estado.novoPedido.carrinho.reduce((total, item) => {
+            const produto = estado.produtos.find(p => Number(p.id) === Number(item.produtoId));
+            const faltantes = Math.max(0, item.quantidade - item.vasilhamesDevolvidos);
+            return total
+                + (Number(produto.precoUnitario) * item.quantidade)
+                + (faltantes * Number(produto.taxaCaucao));
+        }, 0);
+    }
+
+    function atualizarConfirmacaoPagamentoNovoPedido(totalInformado) {
+        const total = totalInformado === undefined ? totalNovoPedido() : totalInformado;
+        el('np-total-confirmacao').textContent = UI.money(total);
+        el('np-forma-confirmacao').textContent = UI.formatarEnum(el('np-forma').value);
+    }
+
+    function mostrarErroNovoPedido(mensagem) {
+        el('np-erro').textContent = mensagem;
+        el('np-erro').classList.remove('hidden');
+    }
+
+    function esconderErroNovoPedido() {
+        el('np-erro').classList.add('hidden');
+        el('np-erro').textContent = '';
+    }
+
+    function fecharNovoPedido() {
+        const dialogo = el('dialog-novo-pedido');
+        if (dialogo.open) {
+            dialogo.close();
+        }
+        estado.novoPedido = { cliente: null, vasilhames: null, carrinho: [] };
+        esconderErroNovoPedido();
+    }
+
+    async function enviarNovoPedido(evento) {
+        evento.preventDefault();
+        const cliente = estado.novoPedido.cliente;
+        const carrinho = estado.novoPedido.carrinho;
+
+        if (!cliente) {
+            return mostrarErroNovoPedido('Selecione um cliente.');
+        }
+        if (carrinho.length === 0) {
+            return mostrarErroNovoPedido('Adicione pelo menos um item ao pedido.');
+        }
+        if (!el('np-pagamento-confirmado').checked) {
+            return mostrarErroNovoPedido('Confirme o recebimento do pagamento antes de criar o pedido.');
+        }
+
+        await comBotao(el('np-criar'), async () => {
+            try {
+                const pedido = await API.post('/admin/pedidos', {
+                    clienteId: cliente.id,
+                    itens: carrinho.map(item => ({
+                        produtoId: item.produtoId,
+                        quantidade: item.quantidade,
+                        vasilhamesDevolvidos: item.vasilhamesDevolvidos
+                    })),
+                    formaPagamento: el('np-forma').value,
+                    observacao: el('np-observacao').value.trim() || null,
+                    pagamentoConfirmado: true
+                });
+
+                fecharNovoPedido();
+                UI.toast('Pedido #' + pedido.id + ' criado para ' + cliente.nome
+                    + '. Pagamento de ' + UI.money(pedido.valorTotal) + ' confirmado.');
+                await carregarTudo();
+            } catch (erro) {
+                mostrarErroNovoPedido(erro.message);
+                el('np-erro').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+    }
+
+    // ------------------------------------------------------------------
+    // Confirmacao de pagamento de um pedido existente
+    // ------------------------------------------------------------------
+
+    function abrirPagamentoPedido(pedidoId) {
+        const pedido = estado.pedidos.find(p => Number(p.id) === Number(pedidoId));
+        if (!pedido) {
+            return UI.erro('Pedido nao encontrado. Atualize o painel.');
+        }
+        if (pedido.pagamentoConfirmado) {
+            return UI.erro('O pagamento do pedido #' + pedido.id + ' ja esta confirmado.');
+        }
+        if (pedido.formaPagamento === 'FATURADO') {
+            return UI.erro('Pedidos FATURADO sao cobrados pelo saldo devedor do cliente.');
+        }
+        if (pedido.status === 'CANCELADO') {
+            return UI.erro('Pedidos cancelados nao podem receber confirmacao de pagamento.');
+        }
+
+        estado.pagamentoPedido = pedido;
+        el('pp-numero').textContent = '#' + pedido.id;
+        el('pp-resumo').innerHTML = `
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <p class="text-sm font-bold text-slate-900">${UI.escapeHtml(pedido.clienteNome)}</p>
+                    <p class="mt-0.5 text-xs text-slate-500">${pedido.totalGarrafoes} garrafão(ões) • ${UI.formatarEnum(pedido.formaPagamento)}</p>
+                    <p class="mt-1 text-xs text-slate-500">Status: ${UI.formatarEnum(pedido.status)}</p>
+                </div>
+                <p class="text-xl font-black text-emerald-700">${UI.money(pedido.valorTotal)}</p>
+            </div>
+            <p class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
+                Confirme somente após receber o valor. O pedido sera marcado como pago e um registro sera salvo no historico do cliente.
+            </p>
+        `;
+        esconderErroPagamentoPedido();
+        el('dialog-pagamento-pedido').showModal();
+    }
+
+    function esconderErroPagamentoPedido() {
+        el('pp-erro').classList.add('hidden');
+        el('pp-erro').textContent = '';
+    }
+
+    function mostrarErroPagamentoPedido(mensagem) {
+        el('pp-erro').textContent = mensagem;
+        el('pp-erro').classList.remove('hidden');
+    }
+
+    function fecharPagamentoPedido() {
+        const dialogo = el('dialog-pagamento-pedido');
+        if (dialogo.open) {
+            dialogo.close();
+        }
+        estado.pagamentoPedido = null;
+    }
+
+    async function confirmarPagamentoPedido() {
+        const pedido = estado.pagamentoPedido;
+        if (!pedido) return;
+
+        await comBotao(el('pp-confirmar'), async () => {
+            try {
+                const atualizado = await API.post(`/admin/pedidos/${pedido.id}/confirmar-pagamento`);
+                fecharPagamentoPedido();
+                UI.toast('Pagamento do pedido #' + pedido.id + ' confirmado: '
+                    + UI.money(atualizado.valorTotal) + '.');
+                await carregarTudo();
+            } catch (erro) {
+                mostrarErroPagamentoPedido(erro.message);
+            }
+        });
+    }
+
+    function configurarNovoPedido() {
+        el('btn-novo-pedido').addEventListener('click', abrirNovoPedido);
+
+        document.querySelectorAll('[data-fechar-novo-pedido]').forEach(botao => {
+            botao.addEventListener('click', fecharNovoPedido);
+        });
+
+        el('dialog-novo-pedido').addEventListener('click', (evento) => {
+            if (evento.target === el('dialog-novo-pedido')) {
+                fecharNovoPedido();
+            }
+        });
+
+        el('dialog-novo-pedido').addEventListener('close', () => {
+            estado.novoPedido = { cliente: null, vasilhames: null, carrinho: [] };
+        });
+
+        el('np-cliente').addEventListener('change', selecionarClienteNovoPedido);
+        el('np-produto').addEventListener('change', atualizarAjudaNovoPedido);
+        el('np-quantidade').addEventListener('input', atualizarAjudaNovoPedido);
+        el('np-adicionar').addEventListener('click', adicionarItemNovoPedido);
+        el('np-forma').addEventListener('change', () => {
+            el('np-pagamento-confirmado').checked = false;
+            atualizarConfirmacaoPagamentoNovoPedido();
+        });
+        el('form-novo-pedido').addEventListener('submit', enviarNovoPedido);
+
+        document.querySelectorAll('[data-fechar-pagamento-pedido]').forEach(botao => {
+            botao.addEventListener('click', fecharPagamentoPedido);
+        });
+
+        el('dialog-pagamento-pedido').addEventListener('click', (evento) => {
+            if (evento.target === el('dialog-pagamento-pedido')) {
+                fecharPagamentoPedido();
+            }
+        });
+
+        el('dialog-pagamento-pedido').addEventListener('close', () => {
+            estado.pagamentoPedido = null;
+        });
+
+        el('pp-confirmar').addEventListener('click', confirmarPagamentoPedido);
+    }
+
+    function renderEntregadores() {
+        el('contador-entregadores').textContent = estado.entregadores.length + ' entregadores';
+        const tabela = el('tabela-entregadores');
+        if (estado.entregadores.length === 0) {
+            tabela.innerHTML = '<tr><td colspan="6" class="px-3 py-8 text-center text-slate-500">Nenhum entregador cadastrado.</td></tr>';
+            return;
+        }
+
+        tabela.innerHTML = estado.entregadores.map(e => {
+            const percentual = e.capacidadeCarga > 0 ? Math.min(100, Math.round((e.cargaAtual / e.capacidadeCarga) * 100)) : 0;
+            return `
+                <tr class="align-top hover:bg-slate-50">
+                    <td class="px-3 py-3">
+                        <p class="font-semibold text-slate-800">${UI.escapeHtml(e.nome)}</p>
+                        <p class="text-xs text-slate-500">${UI.escapeHtml(e.email)} • ${UI.escapeHtml(e.telefone || 'sem telefone')}</p>
+                    </td>
+                    <td class="px-3 py-3 text-slate-600">${UI.formatarEnum(e.zona)}</td>
+                    <td class="px-3 py-3 text-slate-600">${UI.escapeHtml([e.veiculoModelo, e.veiculoPlaca].filter(Boolean).join(' • ') || '—')}</td>
+                    <td class="px-3 py-3 text-slate-600">${e.capacidadeCarga}</td>
+                    <td class="px-3 py-3">
+                        <p class="text-xs font-semibold text-slate-700">${e.cargaAtual} / ${e.capacidadeCarga}</p>
+                        <div class="progress-track mt-1 h-1.5 w-28 rounded-full">
+                            <div class="progress-fill h-1.5 rounded-full" style="width:${percentual}%"></div>
+                        </div>
+                    </td>
+                    <td class="px-3 py-3 font-bold ${e.capacidadeDisponivel > 0 ? 'text-emerald-600' : 'text-rose-600'}">${e.capacidadeDisponivel}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderEstoque() {
+        const tabela = el('tabela-estoque');
+        const itens = estado.estoque.itens || [];
+        if (itens.length === 0) {
+            tabela.innerHTML = '<tr><td colspan="6" class="px-3 py-8 text-center text-slate-500">Nenhum produto cadastrado.</td></tr>';
+            return;
+        }
+
+        tabela.innerHTML = itens.map(item => `
+            <tr class="hover:bg-slate-50">
+                <td class="px-3 py-3">
+                    <p class="font-semibold text-slate-800">${UI.escapeHtml(item.nome)}</p>
+                    <p class="text-xs text-slate-500">${UI.escapeHtml(item.codigo)} • ${item.volumeLitros}L</p>
+                </td>
+                <td class="px-3 py-3 text-right font-bold ${item.disponiveisNaCentral > 0 ? 'text-emerald-600' : 'text-rose-600'}">${item.disponiveisNaCentral}</td>
+                <td class="px-3 py-3 text-right text-slate-600">${item.emTransito}</td>
+                <td class="px-3 py-3 text-right text-slate-600">${item.comClientes}</td>
+                <td class="px-3 py-3 text-right font-semibold text-rose-600">${item.vencidos}</td>
+                <td class="px-3 py-3 text-right text-slate-400">${item.descartados}</td>
+            </tr>
+        `).join('');
+    }
+
+    function preencherSelectProdutos() {
+        const select = el('rep-produto');
+        const atual = select.value;
+        const opcoes = estado.produtos
+            .map(p => `<option value="${p.id}">${UI.escapeHtml(p.nome)} (${UI.escapeHtml(p.codigo)})</option>`)
+            .join('');
+        select.innerHTML = '<option value="">Selecione um produto...</option>' + opcoes;
+        if (atual && [...select.options].some(o => o.value === atual)) {
+            select.value = atual;
+        } else {
+            select.value = '';
+        }
+    }
+
+    function limparReposicao() {
+        el('rep-produto').value = '';
+        el('rep-quantidade').value = '';
+        el('rep-validade').value = '';
+    }
+
+    function configurarTabs() {
+        const botoes = [...document.querySelectorAll('[data-tab]')];
+        const secoes = [...document.querySelectorAll('[data-section]')];
+
+        botoes.forEach(botao => {
+            botao.addEventListener('click', () => {
+                botoes.forEach(b => {
+                    b.classList.remove('tab-ativo');
+                    b.classList.add('text-slate-600', 'hover:bg-slate-100');
+                });
+                botao.classList.add('tab-ativo');
+                botao.classList.remove('text-slate-600', 'hover:bg-slate-100');
+                secoes.forEach(secao => {
+                    secao.classList.toggle('hidden', secao.dataset.section !== botao.dataset.tab);
+                });
+            });
+        });
+    }
+
+    function configurarFormularios() {
+        el('filtro-status').addEventListener('change', renderPedidos);
+
+        configurarNovoPedido();
+
+        el('btn-limpar-repor').addEventListener('click', limparReposicao);
+
+        document.querySelectorAll('[data-fechar-pagamento]').forEach(botao => {
+            botao.addEventListener('click', fecharPagamento);
+        });
+
+        el('dialog-pagamento').addEventListener('click', (evento) => {
+            if (evento.target === el('dialog-pagamento')) {
+                fecharPagamento();
+            }
+        });
+
+        el('dialog-pagamento').addEventListener('close', () => {
+            estado.pagamentoCliente = null;
+        });
+
+        el('btn-saldo-total').addEventListener('click', () => {
+            if (!estado.pagamentoCliente) return;
+            el('pagamento-valor').value = Number(estado.pagamentoCliente.saldoDevedor).toFixed(2);
+            esconderErroPagamento();
+            el('pagamento-valor').focus();
+        });
+
+        el('pagamento-valor').addEventListener('input', esconderErroPagamento);
+
+        el('form-pagamento').addEventListener('submit', async (evento) => {
+            evento.preventDefault();
+            const cliente = estado.pagamentoCliente;
+            if (!cliente) return;
+
+            const valor = Number(el('pagamento-valor').value);
+            const saldo = Number(cliente.saldoDevedor);
+
+            if (!Number.isFinite(valor) || valor <= 0) {
+                return mostrarErroPagamento('Informe um valor de pagamento maior que zero.');
+            }
+            if (valor > saldo) {
+                return mostrarErroPagamento('O valor informado excede o saldo devedor de ' + UI.money(saldo) + '.');
+            }
+
+            esconderErroPagamento();
+
+            await comBotao(el('btn-confirmar-pagamento'), async () => {
+                let atualizado;
+                try {
+                    atualizado = await API.post(`/admin/clientes/${cliente.id}/pagamentos`, {
+                        valor: Number(valor.toFixed(2)),
+                        descricao: el('pagamento-descricao').value.trim() || null
+                    });
+                } catch (erro) {
+                    mostrarErroPagamento(erro.message);
+                    return;
+                }
+
+                fecharPagamento();
+                UI.toast('Pagamento de ' + UI.money(valor) + ' registrado. Novo saldo devedor: '
+                    + UI.money(atualizado.saldoDevedor) + '.');
+
+                try {
+                    await carregarTudo();
+                } catch (erro) {
+                    UI.erro(erro.message);
+                }
+            });
+        });
+
+        el('cli-tipo').addEventListener('change', () => {
+            const corporativo = el('cli-tipo').value === 'CORPORATIVO';
+            el('cli-limite').disabled = !corporativo;
+            if (!corporativo) el('cli-limite').value = '0';
+            if (corporativo && Number(el('cli-limite').value) <= 0) el('cli-limite').value = '1000.00';
+        });
+
+        el('form-cliente').addEventListener('submit', async (evento) => {
+            evento.preventDefault();
+            const botao = evento.submitter;
+            const tipo = el('cli-tipo').value;
+            const limite = Number(el('cli-limite').value || 0);
+            if (tipo === 'CORPORATIVO' && limite <= 0) {
+                return UI.erro('Informe um limite de crédito maior que zero para cliente corporativo.');
+            }
+
+            const payload = {
+                nome: el('cli-nome').value.trim(),
+                email: el('cli-email').value.trim(),
+                senha: el('cli-senha').value,
+                tipo,
+                documento: el('cli-documento').value.trim(),
+                telefone: el('cli-telefone').value.trim() || null,
+                endereco: {
+                    logradouro: el('cli-logradouro').value.trim(),
+                    numero: el('cli-numero').value.trim(),
+                    complemento: el('cli-complemento').value.trim() || null,
+                    bairro: el('cli-bairro').value.trim(),
+                    cidade: el('cli-cidade').value.trim(),
+                    uf: el('cli-uf').value.trim().toUpperCase(),
+                    cep: el('cli-cep').value.trim(),
+                    zona: el('cli-zona').value
+                },
+                limiteCredito: tipo === 'CORPORATIVO' ? limite : 0
+            };
+
+            await comBotao(botao, async () => {
+                try {
+                    const cliente = await API.post('/admin/clientes', payload);
+                    UI.toast('Cliente ' + cliente.nome + ' cadastrado.');
+                    evento.target.reset();
+                    el('cli-tipo').dispatchEvent(new Event('change'));
+                    await carregarTudo();
+                } catch (erro) {
+                    UI.erro(erro.message);
+                }
+            });
+        });
+
+        el('form-entregador').addEventListener('submit', async (evento) => {
+            evento.preventDefault();
+            const botao = evento.submitter;
+            const payload = {
+                nome: el('ent-nome').value.trim(),
+                email: el('ent-email').value.trim(),
+                senha: el('ent-senha').value,
+                telefone: el('ent-telefone').value.trim() || null,
+                zona: el('ent-zona').value,
+                capacidadeCarga: Number(el('ent-capacidade').value),
+                veiculoModelo: el('ent-modelo').value.trim() || null,
+                veiculoPlaca: el('ent-placa').value.trim().toUpperCase() || null
+            };
+
+            await comBotao(botao, async () => {
+                try {
+                    const entregador = await API.post('/admin/entregadores', payload);
+                    UI.toast('Entregador ' + entregador.nome + ' cadastrado.');
+                    evento.target.reset();
+                    await carregarTudo();
+                } catch (erro) {
+                    UI.erro(erro.message);
+                }
+            });
+        });
+
+        el('form-produto').addEventListener('submit', async (evento) => {
+            evento.preventDefault();
+            const botao = evento.submitter;
+            const payload = {
+                codigo: el('prod-codigo').value.trim().toUpperCase(),
+                nome: el('prod-nome').value.trim(),
+                volumeLitros: Number(el('prod-volume').value),
+                precoUnitario: Number(el('prod-preco').value),
+                taxaCaucao: Number(el('prod-caucao').value)
+            };
+
+            await comBotao(botao, async () => {
+                try {
+                    const produto = await API.post('/admin/produtos', payload);
+                    UI.toast('Produto ' + produto.nome + ' criado. Reponha o estoque inicial.');
+                    evento.target.reset();
+                    el('prod-volume').value = '15';
+                    el('prod-preco').value = '10.00';
+                    el('prod-caucao').value = '22.00';
+                    await carregarTudo();
+                } catch (erro) {
+                    UI.erro(erro.message);
+                }
+            });
+        });
+
+        el('form-repor').addEventListener('submit', async (evento) => {
+            evento.preventDefault();
+            const botao = evento.submitter;
+            const produtoId = Number(el('rep-produto').value);
+            const quantidade = Number(el('rep-quantidade').value);
+            const dataValidade = el('rep-validade').value;
+
+            if (!produtoId) {
+                return UI.erro('Selecione um produto para repor o estoque.');
+            }
+            if (!Number.isInteger(quantidade) || quantidade < 1) {
+                return UI.erro('Informe uma quantidade inteira maior que zero.');
+            }
+            if (!dataValidade) {
+                return UI.erro('Informe a data de validade do lote.');
+            }
+            if (dataValidade < isoHoje()) {
+                return UI.erro('A data de validade não pode estar no passado.');
+            }
+
+            const produto = estado.produtos.find(p => Number(p.id) === produtoId);
+
+            await comBotao(botao, async () => {
+                try {
+                    const lote = await API.post('/admin/vasilhames/lote', {
+                        produtoId,
+                        quantidade,
+                        dataValidade
+                    });
+                    limparReposicao();
+                    UI.toast(lote.length + ' unidade(s) de ' + (produto ? produto.nome : 'produto')
+                        + ' adicionadas ao estoque central.');
+                    await carregarTudo();
+                } catch (erro) {
+                    UI.erro(erro.message);
+                }
+            });
+        });
+
+        el('btn-atualizar').addEventListener('click', async (evento) => {
+            await comBotao(evento.currentTarget, async () => {
+                try {
+                    await carregarTudo();
+                    UI.toast('Painel atualizado.');
+                } catch (erro) {
+                    UI.erro(erro.message);
+                }
+            });
+        });
+    }
+</script>
+</body>
+</html>

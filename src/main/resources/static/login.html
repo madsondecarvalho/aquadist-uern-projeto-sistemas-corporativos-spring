@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaDist — Acesso</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💧</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        aqua: {
+                            50: '#ecfeff', 100: '#cffafe', 200: '#a5f3fc', 300: '#67e8f9',
+                            400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2', 700: '#0e7490',
+                            800: '#155e75', 900: '#164e63'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="stylesheet" href="/assets/css/app.css">
+</head>
+<body class="min-h-screen aqua-bg text-slate-900">
+<div class="mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-10 lg:px-8">
+    <div class="grid items-center gap-10 lg:grid-cols-2">
+        <div class="text-white">
+            <div class="mb-6 flex items-center gap-3">
+                <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-2xl ring-1 ring-white/20">💧</span>
+                <div>
+                    <p class="text-2xl font-bold tracking-tight">AquaDist</p>
+                    <p class="text-sm text-cyan-100/80">Gestão de pedidos e entregas</p>
+                </div>
+            </div>
+
+            <h1 class="max-w-xl text-4xl font-black leading-tight tracking-tight sm:text-5xl">
+                Água mineral na porta do cliente, com rota certa e cobrança sem surpresa.
+            </h1>
+            <p class="mt-5 max-w-lg text-base leading-relaxed text-cyan-50/85">
+                Centralize pedidos, controle o estoque de garrafões, valide a troca de vasilhames
+                e acompanhe entregas em tempo real. Um projeto de demonstração com Spring Boot e SQLite.
+            </p>
+
+            <div class="mt-8 grid max-w-lg grid-cols-3 gap-3 text-center">
+                <div class="rounded-2xl bg-white/10 p-4 ring-1 ring-white/15">
+                    <p class="text-2xl font-bold">5</p>
+                    <p class="mt-1 text-xs text-cyan-100">regras de negócio</p>
+                </div>
+                <div class="rounded-2xl bg-white/10 p-4 ring-1 ring-white/15">
+                    <p class="text-2xl font-bold">3</p>
+                    <p class="mt-1 text-xs text-cyan-100">perfis RBAC</p>
+                </div>
+                <div class="rounded-2xl bg-white/10 p-4 ring-1 ring-white/15">
+                    <p class="text-2xl font-bold">100%</p>
+                    <p class="mt-1 text-xs text-cyan-100">local, com SQLite</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mx-auto w-full max-w-md">
+            <div class="glass rounded-3xl p-7 shadow-2xl shadow-slate-950/30 sm:p-8">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold tracking-tight text-slate-900">Entrar no sistema</h2>
+                    <p class="mt-1 text-sm text-slate-500">Use uma conta de demonstração ou suas credenciais.</p>
+                </div>
+
+                <form id="form-login" class="space-y-4" autocomplete="on">
+                    <div>
+                        <label for="email" class="mb-1.5 block text-sm font-semibold text-slate-700">E-mail</label>
+                        <input id="email" name="email" type="email" required autocomplete="username"
+                               placeholder="voce@aquadist.com"
+                               class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm shadow-sm outline-none transition focus:border-aqua-500 focus:ring-4 focus:ring-aqua-100">
+                    </div>
+                    <div>
+                        <label for="senha" class="mb-1.5 block text-sm font-semibold text-slate-700">Senha</label>
+                        <div class="relative">
+                            <input id="senha" name="senha" type="password" required autocomplete="current-password"
+                                   placeholder="••••••••"
+                                   class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 pr-20 text-sm shadow-sm outline-none transition focus:border-aqua-500 focus:ring-4 focus:ring-aqua-100">
+                            <button type="button" id="btn-mostrar-senha"
+                                    class="absolute inset-y-0 right-2 my-auto h-8 rounded-lg px-2 text-xs font-semibold text-aqua-700 hover:bg-aqua-50">
+                                Mostrar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="erro-login" class="hidden rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-800"></div>
+
+                    <button id="btn-entrar" type="submit"
+                            class="flex w-full items-center justify-center gap-2 rounded-xl bg-aqua-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-aqua-600/25 transition hover:bg-aqua-700 disabled:cursor-wait disabled:opacity-70">
+                        <span>Entrar</span>
+                        <span aria-hidden="true">→</span>
+                    </button>
+                </form>
+
+                <div class="my-6 flex items-center gap-3">
+                    <div class="h-px flex-1 bg-slate-200"></div>
+                    <span class="text-xs font-medium uppercase tracking-wider text-slate-400">Contas demo</span>
+                    <div class="h-px flex-1 bg-slate-200"></div>
+                </div>
+
+                <div class="grid gap-2">
+                    <button type="button" data-demo="maria@email.com|cliente123"
+                            class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-left transition hover:border-aqua-300 hover:bg-aqua-50/50">
+                        <span>
+                            <span class="block text-sm font-semibold text-slate-800">Cliente residencial</span>
+                            <span class="block text-xs text-slate-500">maria@email.com</span>
+                        </span>
+                        <span class="text-xs font-semibold text-aqua-700">Usar</span>
+                    </button>
+                    <button type="button" data-demo="mercado@aquadist.com|cliente123"
+                            class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-left transition hover:border-aqua-300 hover:bg-aqua-50/50">
+                        <span>
+                            <span class="block text-sm font-semibold text-slate-800">Cliente corporativo</span>
+                            <span class="block text-xs text-slate-500">mercado@aquadist.com</span>
+                        </span>
+                        <span class="text-xs font-semibold text-aqua-700">Usar</span>
+                    </button>
+                    <button type="button" data-demo="ana@aquadist.com|entregador123"
+                            class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-left transition hover:border-aqua-300 hover:bg-aqua-50/50">
+                        <span>
+                            <span class="block text-sm font-semibold text-slate-800">Entregador</span>
+                            <span class="block text-xs text-slate-500">ana@aquadist.com</span>
+                        </span>
+                        <span class="text-xs font-semibold text-aqua-700">Usar</span>
+                    </button>
+                    <button type="button" data-demo="admin@aquadist.com|admin123"
+                            class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-left transition hover:border-aqua-300 hover:bg-aqua-50/50">
+                        <span>
+                            <span class="block text-sm font-semibold text-slate-800">Administrador</span>
+                            <span class="block text-xs text-slate-500">admin@aquadist.com</span>
+                        </span>
+                        <span class="text-xs font-semibold text-aqua-700">Usar</span>
+                    </button>
+                </div>
+            </div>
+
+            <p class="mt-4 text-center text-xs text-cyan-50/60">
+                Autenticação HTTP Basic + RBAC (CLIENTE, ENTREGADOR, ADMIN).
+            </p>
+        </div>
+    </div>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script>
+    const { Auth, API, homeFor } = window.Aqua;
+    const form = document.getElementById('form-login');
+    const erroBox = document.getElementById('erro-login');
+    const botao = document.getElementById('btn-entrar');
+
+    function mostrarErro(mensagem) {
+        erroBox.textContent = mensagem;
+        erroBox.classList.remove('hidden');
+    }
+
+    function esconderErro() {
+        erroBox.classList.add('hidden');
+        erroBox.textContent = '';
+    }
+
+    document.querySelectorAll('[data-demo]').forEach(botaoDemo => {
+        botaoDemo.addEventListener('click', () => {
+            const [email, senha] = botaoDemo.dataset.demo.split('|');
+            document.getElementById('email').value = email;
+            document.getElementById('senha').value = senha;
+            esconderErro();
+        });
+    });
+
+    document.getElementById('btn-mostrar-senha').addEventListener('click', (evento) => {
+        const campo = document.getElementById('senha');
+        const mostrando = campo.type === 'text';
+        campo.type = mostrando ? 'password' : 'text';
+        evento.currentTarget.textContent = mostrando ? 'Mostrar' : 'Ocultar';
+    });
+
+    form.addEventListener('submit', async (evento) => {
+        evento.preventDefault();
+        esconderErro();
+
+        const email = document.getElementById('email').value.trim();
+        const senha = document.getElementById('senha').value;
+        botao.disabled = true;
+        botao.querySelector('span').textContent = 'Entrando...';
+
+        try {
+            Auth.set(email, senha);
+            const usuario = await API.get('/auth/me');
+            Auth.setUser(usuario);
+            location.href = homeFor(usuario.perfil);
+        } catch (erro) {
+            Auth.clear();
+            mostrarErro(erro.status === 401
+                ? 'E-mail ou senha invalidos. Confira as credenciais de demonstracao.'
+                : erro.message);
+        } finally {
+            botao.disabled = false;
+            botao.querySelector('span').textContent = 'Entrar';
+        }
+    });
+
+    (async () => {
+        if (!Auth.get()) return;
+        try {
+            const usuario = await API.get('/auth/me');
+            Auth.setUser(usuario);
+            location.replace(homeFor(usuario.perfil));
+        } catch (erro) {
+            Auth.clear();
+        }
+    })();
+</script>
+</body>
+</html>

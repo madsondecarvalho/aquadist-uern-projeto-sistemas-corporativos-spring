@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaDist — Carregando</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💧</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-aqua-900 to-cyan-700 text-white">
+<div class="flex flex-col items-center gap-4">
+    <div class="flex h-16 w-16 animate-pulse items-center justify-center rounded-2xl bg-white/10 text-3xl ring-1 ring-white/20">💧</div>
+    <div class="h-1.5 w-40 overflow-hidden rounded-full bg-white/15">
+        <div class="h-full w-1/2 animate-[loading_1.1s_ease-in-out_infinite] rounded-full bg-cyan-300"></div>
+    </div>
+    <p class="text-sm text-cyan-100">Redirecionando para o painel...</p>
+</div>
+<style>
+    @keyframes loading {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(220%); }
+    }
+</style>
+<script src="/assets/js/api.js"></script>
+<script>
+    (async () => {
+        const { Auth, API, homeFor } = window.Aqua;
+        if (!Auth.get()) {
+            location.replace('/login.html');
+            return;
+        }
+        try {
+            const usuario = await API.get('/auth/me');
+            Auth.setUser(usuario);
+            location.replace(homeFor(usuario.perfil));
+        } catch (erro) {
+            Auth.clear();
+            location.replace('/login.html');
+        }
+    })();
+</script>
+</body>
+</html>
